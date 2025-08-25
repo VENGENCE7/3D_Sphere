@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGL Test</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="test"></canvas>
+    <script>
+        const canvas = document.getElementById('test');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const gl = canvas.getContext('webgl');
+        if (!gl) {
+            alert('WebGL not supported');
+        } else {
+            gl.clearColor(0.2, 0.3, 0.4, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            console.log('WebGL working!');
+        }
+    </script>
+</body>
+</html>
