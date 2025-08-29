@@ -12,6 +12,7 @@ varying float vEdgeFade;
 varying float vDistortion;
 varying float vRadialDist;
 varying float vFoldDepth;
+varying float vWaveDisplacement;  // For color flow with waves
 
 const float radius = 1.5;
 const float PI = 3.14159265359;
@@ -23,241 +24,143 @@ const float PI = 3.14159265359;
 float createFoldingWaves(vec3 p) {
     float time = uTime;
     
-    // === MASTER TOGGLE - UNCOMMENT TO DISABLE ALL WAVES ===
-    // return 0.0;  // <-- UNCOMMENT THIS LINE TO TURN OFF ALL WAVES
+    // === COSMIC WAVE CONTROLS ===
+    float WAVE_FREQUENCY = 5.0;       // Ripple frequency
+    float WAVE_SPEED = 0.25;          // Wave expansion speed
+    float WAVE_THICKNESS = 0.35;      // Wave ring thickness  
+    float WAVE_AMPLITUDE = 0.25;      // Base wave amplitude
+    float WAVE_DECAY = 1.2;           // How fast waves fade with distance
+    float ORIGIN_SPEED = 0.2;         // How fast origins orbit the sphere
+    float MIN_ORIGIN_DISTANCE = 0.7;  // Minimum distance between origins
     
-    // === INDIVIDUAL WAVE TOGGLES ===
-    // Set to 0.0 to disable specific waves, 1.0 to enable
-    float enableWave1Main = 1.0;      // First circular wave (top-right)
-    float enableWave1Secondary = 1.0; // Second circular wave (top-right)
-    float enableWave2Main = 1.0;      // Opposite circular wave (bottom-left)
-    float enableWave2Secondary = 1.0; // Opposite second wave (bottom-left)
+    // === THREE MOVING WAVE ORIGINS ===
+    // Origins orbit the sphere creating dynamic, ever-changing patterns
     
-    // === GLOBAL WAVE CONTROLS ===
-    // Control the frequency and form of all waves
-    float WAVE_FREQUENCY = 6.0;      // Ripple frequency (5.0 = fewer ripples, 20.0 = many ripples)
-    float WAVE_SPEED = 0.25;           // Expansion speed (0.1 = slow, 0.5 = fast)
-    float WAVE_THICKNESS = 0.5;       // Ring thickness (0.2 = thin, 0.8 = thick)
-    float WAVE_AMPLITUDE = 0.8;       // Base wave height (0.1 = subtle, 0.5 = tall)
-    float WAVE_MAX_AMPLITUDE = 2.2;   // Maximum height at clash (0.5 = low, 2.0 = very tall)
-    float WAVE_FORM = 1.0;            // Wave shape (0.5 = smooth, 1.0 = normal, 2.0 = sharp)
+    // Origin 1: Horizontal orbit with slight vertical oscillation
+    float orbit1 = time * ORIGIN_SPEED;
+    vec3 origin1 = normalize(vec3(
+        cos(orbit1) * 1.2,
+        sin(orbit1 * 0.7) * 0.6,  // Vertical wobble
+        sin(orbit1) * 1.2
+    ));
     
-    // === WAVE TIMING SYSTEM ===
-    // The waves appear in sequence, creating a choreographed animation
-    // - Wave 1 Main: Every 10 seconds (circular expanding ring)
-    // - Wave 1 Secondary: 20-40 seconds in cycle (follow-up ring)
-    // - Wave 2 Main: Every 10 seconds (opposite circular ring)
-    // - Wave 2 Secondary: 20-40 seconds in cycle (opposite follow-up)
-    float totalCycle = 20.0; // 4 waves × 20 seconds each
-    float currentPhase = mod(time, totalCycle);
+    // Origin 2: Diagonal orbit, offset from origin 1
+    float orbit2 = time * ORIGIN_SPEED * 0.8 + 2.094;  // Different speed and phase
+    vec3 origin2 = normalize(vec3(
+        cos(orbit2 * 1.3) * 1.1,
+        sin(orbit2) * 0.9,
+        sin(orbit2 * 1.1) * 1.1
+    ));
     
-    float wave1_main = 0.0;
-    float wave1_secondary = 0.0;
-    float wave2_main = 0.0;        // Opposite wave from bottom-left
-    float wave2_secondary = 0.0;   // Opposite secondary wave
+    // Origin 3: Vertical orbit with complex motion
+    float orbit3 = time * ORIGIN_SPEED * 1.2 + 4.189;  // Fastest orbit
+    vec3 origin3 = normalize(vec3(
+        sin(orbit3 * 0.9) * 0.8,
+        cos(orbit3 * 0.7) * 1.3,
+        cos(orbit3 * 1.2) * 0.8
+    ));
     
-    // === WAVE 1 MAIN: Circular expanding ring (repeats every 10 seconds) ===
-    // This wave operates on its own 10-second cycle, independent of other waves
-    float mainWaveCycle = 4.0;  // Repeat every 10 seconds
-    float mainWavePhase = mod(time, mainWaveCycle);
+    // Ensure minimum distance between origins (push apart if too close)
+    vec3 separation12 = origin2 - origin1;
+    vec3 separation13 = origin3 - origin1;
+    vec3 separation23 = origin3 - origin2;
     
-    // Calculate clash detection parameters
-    vec3 origin1 = vec3(0.707, 0.707, 0.5);   // Wave 1 origin
-    vec3 origin2 = vec3(-0.707, -0.707, 0.65); // Wave 2 origin (opposite)
-    float clashDistance = length(origin1 - origin2); // Distance between origins
-    float clashPoint = clashDistance * 0.5; // Middle point where waves meet
+    float dist12 = length(separation12);
+    float dist13 = length(separation13);
+    float dist23 = length(separation23);
     
-    if (enableWave1Main > 0.0) {
-        // === WAVE PARAMETERS (Using global controls) ===
-        float expansionSpeed = WAVE_SPEED;     // Units per second (higher = faster)
-        float waveThickness = WAVE_THICKNESS;  // Ring thickness (higher = thicker ring)
-        float waveFrequency = WAVE_FREQUENCY;  // Oscillations (higher = more ripples)
-        float baseAmplitude = WAVE_AMPLITUDE;  // Starting wave height
-        float maxAmplitude = WAVE_MAX_AMPLITUDE; // Maximum wave height at clash
+    // Adjust origins if they're too close
+    if (dist12 < MIN_ORIGIN_DISTANCE) {
+        origin2 = normalize(origin1 + normalize(separation12) * MIN_ORIGIN_DISTANCE);
+    }
+    if (dist13 < MIN_ORIGIN_DISTANCE) {
+        origin3 = normalize(origin1 + normalize(separation13) * MIN_ORIGIN_DISTANCE);
+    }
+    
+    // === CONTINUOUS WAVE GENERATION FROM ALL THREE ORIGINS ===
+    float totalWave = 0.0;
+    
+    // Wave from Origin 1
+    float dist1 = length(p - origin1);
+    for (float i = 0.0; i < 3.0; i++) {
+        float waveTime = time + i * 2.5;  // Offset each wave
+        float waveRadius = mod(waveTime * WAVE_SPEED, 2.5);  // Waves continuously expand to radius 2.5
+        float ringDist = abs(dist1 - waveRadius);
         
-        float distFromOrigin1 = length(p - origin1);
-        float waveAge = mainWavePhase;  // Use independent 10-second cycle
-        float waveRadius = waveAge * expansionSpeed;
-        
-        // Check if wave has reached clash point and should dissolve
-        float maxRadius = clashPoint + waveThickness * 0.5; // Vanish right after clash point
-        
-        if (waveRadius < maxRadius) { // Only show wave before it vanishes at clash
-            float ringDistance = abs(distFromOrigin1 - waveRadius);
-            if (ringDistance < waveThickness) {
-                // Calculate growth factor - wave grows as it approaches clash point
-                float progressToClash = waveRadius / clashPoint; // 0 at start, 1 at clash
-                
-                // Exponential growth as wave approaches clash point
-                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
-                
-                // Sharp vanish at clash point
-                float clashFade = 1.0;
-                if (waveRadius > clashPoint * 0.95) { // Vanish very close to clash
-                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
-                }
-                
-                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
-                // Apply wave form control (1.0 = sine wave, higher = sharper peaks)
-                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
-                wave1_main = waveShape * intensity * growthFactor * enableWave1Main;
-            }
+        if (ringDist < WAVE_THICKNESS) {
+            float decay = exp(-waveRadius * WAVE_DECAY);  // Waves fade with distance
+            float intensity = (1.0 - ringDist / WAVE_THICKNESS) * decay;
+            float waveShape = sin(ringDist * WAVE_FREQUENCY + waveTime * 2.0);
+            totalWave += waveShape * intensity * WAVE_AMPLITUDE;
         }
     }
     
-    // === WAVE 1 SECONDARY: Second ring from same origin (20-40 seconds) ===
-    else if (currentPhase >= 20.0 && currentPhase < 40.0 && enableWave1Secondary > 0.0) {
-        // === ORIGIN CONFIGURATION ===
-        // Uses same origin as Wave 1 Main for follow-up effect
-        // To use different origin, change these values:
-        vec3 origin1 = vec3(0.707, 0.707, 0.5);  // Same as Wave 1 Main
+    // Wave from Origin 2
+    float dist2 = length(p - origin2);
+    for (float i = 0.0; i < 3.0; i++) {
+        float waveTime = time + i * 2.5 + 1.0;  // Different phase offset
+        float waveRadius = mod(waveTime * WAVE_SPEED * 0.9, 2.5);  // Slightly different speed
+        float ringDist = abs(dist2 - waveRadius);
         
-        // === WAVE PARAMETERS (Using global controls) ===
-        float expansionSpeed = WAVE_SPEED;     // Same speed as main wave
-        float waveThickness = WAVE_THICKNESS;  // Same thickness
-        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
-        float baseAmplitude = WAVE_AMPLITUDE * 0.67; // Starting amplitude for secondary (2/3 of main)
-        float maxAmplitude = WAVE_MAX_AMPLITUDE * 0.67; // Maximum height at clash (2/3 of main)
-        
-        float distFromOrigin1 = length(p - origin1);
-        float waveAge = currentPhase - 20.0;
-        float waveRadius = waveAge * expansionSpeed;
-        
-        // Vanish at clash point
-        float maxRadius = clashPoint + waveThickness * 0.5;
-        
-        if (waveRadius < maxRadius) {
-            float ringDistance = abs(distFromOrigin1 - waveRadius);
-            if (ringDistance < waveThickness) {
-                // Growth factor - wave grows as it approaches clash
-                float progressToClash = waveRadius / clashPoint;
-                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
-                
-                // Sharp vanish at clash
-                float clashFade = 1.0;
-                if (waveRadius > clashPoint * 0.95) {
-                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
-                }
-                
-                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
-                // Apply wave form control
-                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
-                wave1_secondary = waveShape * intensity * growthFactor * enableWave1Secondary;
-            }
+        if (ringDist < WAVE_THICKNESS) {
+            float decay = exp(-waveRadius * WAVE_DECAY);
+            float intensity = (1.0 - ringDist / WAVE_THICKNESS) * decay;
+            float waveShape = sin(ringDist * WAVE_FREQUENCY * 1.1 + waveTime * 2.2);
+            totalWave += waveShape * intensity * WAVE_AMPLITUDE;
         }
     }
     
-    // === WAVE 2 MAIN: Opposite circular wave (repeats every 10 seconds) ===
-    // This wave comes from diagonally opposite position to create clash effect
-    if (enableWave2Main > 0.0) {
-        // === WAVE PARAMETERS (Using global controls) ===
-        float expansionSpeed = WAVE_SPEED;     // Same speed
-        float waveThickness = WAVE_THICKNESS;  // Same thickness
-        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
-        float baseAmplitude = WAVE_AMPLITUDE;  // Starting wave height
-        float maxAmplitude = WAVE_MAX_AMPLITUDE; // Maximum wave height at clash
+    // Wave from Origin 3
+    float dist3 = length(p - origin3);
+    for (float i = 0.0; i < 3.0; i++) {
+        float waveTime = time + i * 2.5 + 2.0;  // Another phase offset
+        float waveRadius = mod(waveTime * WAVE_SPEED * 1.1, 2.5);  // Fastest waves
+        float ringDist = abs(dist3 - waveRadius);
         
-        float distFromOrigin2 = length(p - origin2);
-        float waveAge = mainWavePhase;  // Use same 10-second cycle as Wave 1 Main
-        float waveRadius = waveAge * expansionSpeed;
-        
-        // Check if wave has reached clash point and should dissolve
-        float maxRadius = clashPoint + waveThickness * 0.5; // Vanish right after clash point
-        
-        if (waveRadius < maxRadius) { // Only show wave before it vanishes at clash
-            float ringDistance = abs(distFromOrigin2 - waveRadius);
-            if (ringDistance < waveThickness) {
-                // Calculate growth factor - wave grows as it approaches clash point
-                float progressToClash = waveRadius / clashPoint; // 0 at start, 1 at clash
-                
-                // Exponential growth as wave approaches clash point
-                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
-                
-                // Sharp vanish at clash point
-                float clashFade = 1.0;
-                if (waveRadius > clashPoint * 0.95) { // Vanish very close to clash
-                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
-                }
-                
-                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
-                // Apply wave form control
-                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
-                wave2_main = waveShape * intensity * growthFactor * enableWave2Main;
-            }
+        if (ringDist < WAVE_THICKNESS) {
+            float decay = exp(-waveRadius * WAVE_DECAY);
+            float intensity = (1.0 - ringDist / WAVE_THICKNESS) * decay;
+            float waveShape = sin(ringDist * WAVE_FREQUENCY * 0.9 + waveTime * 1.8);
+            totalWave += waveShape * intensity * WAVE_AMPLITUDE;
         }
     }
     
-    // === WAVE 2 SECONDARY: Opposite follow-up wave (20-40 seconds) ===
-    else if (currentPhase >= 20.0 && currentPhase < 40.0 && enableWave2Secondary > 0.0) {
-        // === ORIGIN CONFIGURATION ===
-        // Same as Wave 2 Main (diagonally opposite to Wave 1)
-        vec3 origin2 = vec3(-0.707, -0.707, -0.5);  // Bottom-left-back quadrant
-        
-        // === WAVE PARAMETERS (Using global controls) ===
-        float expansionSpeed = WAVE_SPEED;     // Same speed
-        float waveThickness = WAVE_THICKNESS;  // Same thickness
-        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
-        float baseAmplitude = WAVE_AMPLITUDE * 0.67; // Starting amplitude for secondary (2/3 of main)
-        float maxAmplitude = WAVE_MAX_AMPLITUDE * 0.67; // Maximum height at clash (2/3 of main)
-        
-        float distFromOrigin2 = length(p - origin2);
-        float waveAge = currentPhase - 20.0;
-        float waveRadius = waveAge * expansionSpeed;
-        
-        // Vanish at clash point
-        float maxRadius = clashPoint + waveThickness * 0.5;
-        
-        if (waveRadius < maxRadius) {
-            float ringDistance = abs(distFromOrigin2 - waveRadius);
-            if (ringDistance < waveThickness) {
-                // Growth factor - wave grows as it approaches clash
-                float progressToClash = waveRadius / clashPoint;
-                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
-                
-                // Sharp vanish at clash
-                float clashFade = 1.0;
-                if (waveRadius > clashPoint * 0.95) {
-                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
-                }
-                
-                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
-                // Apply wave form control
-                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
-                wave2_secondary = waveShape * intensity * growthFactor * enableWave2Secondary;
-            }
-        }
+    // === WAVE INTERFERENCE AND CLASH EFFECTS ===
+    // Where waves meet, they create complex interference patterns
+    
+    // Check for wave overlaps (clash zones)
+    float overlap12 = max(0.0, 1.0 - dist12 / (WAVE_THICKNESS * 4.0));
+    float overlap13 = max(0.0, 1.0 - dist13 / (WAVE_THICKNESS * 4.0));
+    float overlap23 = max(0.0, 1.0 - dist23 / (WAVE_THICKNESS * 4.0));
+    
+    // Amplify waves at clash points
+    float clashBoost = 1.0 + (overlap12 + overlap13 + overlap23) * 0.8;
+    totalWave *= clashBoost;
+    
+    // Add turbulence at clash zones
+    if (overlap12 > 0.1 || overlap13 > 0.1 || overlap23 > 0.1) {
+        float turbulence = sin(dist1 * 15.0 + time * 5.0) * 0.03;
+        turbulence += cos(dist2 * 12.0 - time * 4.0) * 0.02;
+        totalWave += turbulence * (overlap12 + overlap13 + overlap23);
     }
     
+    // === COSMIC UNSTABLE SHAPE ===
+    // Add low-frequency deformation for organic, unstable appearance
+    float cosmicDeform = sin(p.x * 2.0 + time * 0.5) * cos(p.y * 1.5 - time * 0.3) * 0.03;
+    cosmicDeform += sin(p.z * 1.8 + time * 0.4) * sin(p.x * 2.2 + time * 0.6) * 0.02;
+    totalWave += cosmicDeform;
     
-    // === WAVE INTERACTION: Detect when waves meet and create clash effects ===
-    // Sum all active waves (including opposite waves for clash)
-    float totalWave = wave1_main + wave1_secondary + wave2_main + wave2_secondary;
+    // Edge behavior - maintain roughly spherical shape
+    float edgeFactor = smoothstep(1.2, 1.5, length(p));
+    totalWave *= (1.0 - edgeFactor * 0.5);  // Reduce displacement at edges
     
-    // CLASH DETECTION: When multiple waves overlap, they interfere
-    // This creates more dramatic effects where waves meet
-    float activeWaves = 0.0;
-    if (abs(wave1_main) > 0.01) activeWaves += 1.0;      // Count if wave is active
-    if (abs(wave1_secondary) > 0.01) activeWaves += 1.0;  // Count if wave is active
-    if (abs(wave2_main) > 0.01) activeWaves += 1.0;      // Count opposite wave
-    if (abs(wave2_secondary) > 0.01) activeWaves += 1.0;  // Count opposite secondary
+    // Store wave displacement for color flow (will be used later)
+    vWaveDisplacement = totalWave;
     
-    // Amplify where waves clash (interference pattern)
-    // TO DISABLE CLASH AMPLIFICATION: Comment out this if block
-    if (activeWaves >= 2.0) {
-        totalWave *= 1.5; // 50% amplitude boost at intersection points
-    }
-    
-    // === EDGE BEHAVIOR: Makes sphere edges pull inward slightly ===
-    // TO DISABLE EDGE EFFECT: Comment out these 3 lines
-    float distanceFromCenter = length(p);
-    if (distanceFromCenter > 1.4) {  // Near the sphere edge (radius = 1.5)
-        totalWave *= -0.2; // Negative value creates inward pull
-    }
-    
-    // Clamp final displacement to maintain sphere shape
-    // -0.05 to 0.1 range keeps deformation subtle
-    return clamp(totalWave, -0.05, 0.1);
+    // Clamp to maintain recognizable sphere shape while allowing dramatic deformation
+    return clamp(totalWave, -0.2, 0.25);
 }
+
 
 // ========================================
 // SECONDARY RIPPLES - Small fast-moving surface details

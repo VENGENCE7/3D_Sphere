@@ -35,11 +35,11 @@ float createFoldingWaves(vec3 p) {
     
     // === GLOBAL WAVE CONTROLS ===
     // Control the frequency and form of all waves
-    float WAVE_FREQUENCY = 6.0;      // Ripple frequency (5.0 = fewer ripples, 20.0 = many ripples)
-    float WAVE_SPEED = 0.25;           // Expansion speed (0.1 = slow, 0.5 = fast)
-    float WAVE_THICKNESS = 0.5;       // Ring thickness (0.2 = thin, 0.8 = thick)
-    float WAVE_AMPLITUDE = 0.8;       // Base wave height (0.1 = subtle, 0.5 = tall)
-    float WAVE_MAX_AMPLITUDE = 2.2;   // Maximum height at clash (0.5 = low, 2.0 = very tall)
+    float WAVE_FREQUENCY = 5.0;      // Ripple frequency (5.0 = fewer ripples, 20.0 = many ripples)
+    float WAVE_SPEED = 0.3;           // Expansion speed (0.1 = slow, 0.5 = fast)
+    float WAVE_THICKNESS = 0.4;       // Ring thickness (0.2 = thin, 0.8 = thick)
+    float WAVE_AMPLITUDE = 0.3;       // Base wave height (0.1 = subtle, 0.5 = tall)
+    float WAVE_MAX_AMPLITUDE = 1.2;   // Maximum height at clash (0.5 = low, 2.0 = very tall)
     float WAVE_FORM = 1.0;            // Wave shape (0.5 = smooth, 1.0 = normal, 2.0 = sharp)
     
     // === WAVE TIMING SYSTEM ===
@@ -58,7 +58,7 @@ float createFoldingWaves(vec3 p) {
     
     // === WAVE 1 MAIN: Circular expanding ring (repeats every 10 seconds) ===
     // This wave operates on its own 10-second cycle, independent of other waves
-    float mainWaveCycle = 4.0;  // Repeat every 10 seconds
+    float mainWaveCycle = 10.0;  // Repeat every 10 seconds
     float mainWavePhase = mod(time, mainWaveCycle);
     
     // Calculate clash detection parameters
