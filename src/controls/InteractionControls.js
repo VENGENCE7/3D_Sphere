@@ -1,7 +1,7 @@
 export class InteractionControls {
-    constructor(camera, sphere) {
+    constructor(camera, sphereGroup) {
         this.camera = camera;
-        this.sphere = sphere;
+        this.sphere = sphereGroup; // This is now the group containing both spheres
         
         // Rotation state
         this.targetRotationX = 0.15;
@@ -36,7 +36,7 @@ export class InteractionControls {
     }
     
     onMouseMove(event) {
-        // Only handle rotation when dragging
+        // Handle rotation when dragging
         if (this.isMouseDown) {
             const deltaX = event.clientX - this.previousMouseX;
             const deltaY = event.clientY - this.previousMouseY;
@@ -94,7 +94,9 @@ export class InteractionControls {
     
     onWheel(event) {
         this.camera.position.z += event.deltaY * 0.002;
-        this.camera.position.z = Math.max(2, Math.min(5, this.camera.position.z));
+        // Allow zooming out much further (was max 5, now 15)
+        // Min 2 for close-up, Max 15 for far view
+        this.camera.position.z = Math.max(2, Math.min(15, this.camera.position.z));
     }
     
     onWindowResize() {
@@ -107,7 +109,7 @@ export class InteractionControls {
         this.currentRotationX += (this.targetRotationX - this.currentRotationX) * 0.1;
         this.currentRotationY += (this.targetRotationY - this.currentRotationY) * 0.1;
         
-        // Auto-rotation when not interacting
+        // Auto-rotation when not interacting (optional - can be disabled)
         if (!this.isMouseDown) {
             this.targetRotationY += 0.0008;
         }

@@ -1,12 +1,10 @@
 import { SceneManager } from './scene/SceneManager.js';
 import { EclipseSphere } from './geometry/EclipseSphere.js';
-import { InteractionControls } from './controls/InteractionControls.js';
 
 class EclipseSphereLauncher {
     constructor() {
         this.sceneManager = null;
         this.eclipseSphere = null;
-        this.controls = null;
         this.animationId = null;
         
         this.init();
@@ -16,15 +14,9 @@ class EclipseSphereLauncher {
         // Initialize scene
         this.sceneManager = new SceneManager();
         
-        // Create eclipse sphere
+        // Create eclipse sphere with full interactivity
         this.eclipseSphere = new EclipseSphere(1.5);
         this.sceneManager.add(this.eclipseSphere.getMesh());
-        
-        // Initialize controls
-        this.controls = new InteractionControls(
-            this.sceneManager.getCamera(),
-            this.eclipseSphere.getMesh()
-        );
         
         // Start animation loop
         this.animate();
@@ -36,11 +28,14 @@ class EclipseSphereLauncher {
         // Get elapsed time
         const elapsedTime = this.sceneManager.getElapsedTime();
         
-        // Update eclipse sphere with time
-        this.eclipseSphere.update(elapsedTime);
+        // Get camera for distance calculation
+        const camera = this.sceneManager.getCamera();
         
-        // Update controls
-        this.controls.update();
+        // Update scene controls (important for zoom functionality)
+        this.sceneManager.update();
+        
+        // Update eclipse sphere with time and camera
+        this.eclipseSphere.update(elapsedTime, camera);
         
         // Render the scene
         this.sceneManager.render();
@@ -49,10 +44,6 @@ class EclipseSphereLauncher {
     dispose() {
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
-        }
-        
-        if (this.controls) {
-            this.controls.dispose();
         }
         
         if (this.eclipseSphere) {
