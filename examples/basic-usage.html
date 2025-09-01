@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WavesSphere - Basic Usage</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+            color: #FFE566;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .control-group button {
+            background: #8000FF;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .control-group button:hover {
+            background: #9900CC;
+        }
+        
+        .control-group input[type="range"] {
+            width: 200px;
+        }
+        
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div class="controls">
+        <h3>WavesSphere Controls</h3>
+        
+        <div class="control-group">
+            <label>Animation</label>
+            <button onclick="sphere.start()">Start</button>
+            <button onclick="sphere.stop()">Stop</button>
+            <button onclick="sphere.reinit()">Reinit</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Zoom Controls</label>
+            <button onclick="sphere.zoomIn()">Zoom In</button>
+            <button onclick="sphere.zoomOut()">Zoom Out</button>
+            <button onclick="sphere.resetZoom()">Reset Zoom</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Zoom Level: <span id="zoomLevel">50%</span></label>
+            <input type="range" id="zoomSlider" min="0" max="100" value="50" 
+                   oninput="setZoomFromSlider(this.value)">
+        </div>
+        
+        <div class="control-group">
+            <label>Auto Rotate</label>
+            <button onclick="toggleAutoRotate()">Toggle Auto Rotate</button>
+        </div>
+    </div>
+    
+    <div class="status" id="status">
+        Loading...
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://unpkg.com/three@latest/build/three.min.js"></script>
+    
+    <!-- WavesSphere Bundle -->
+    <script src="../src/assets/waves-sphere-bundle.js"></script>
+    
+    <script>
+        let sphere;
+        let autoRotateEnabled = true;
+        
+        // Initialize the sphere
+        function init() {
+            try {
+                const container = document.getElementById('container');
+                
+                sphere = new WavesSphere(container, {
+                    autoRotate: true,
+                    autoRotateSpeed: 0.001,
+                    enableControls: true,
+                    cameraDistance: 4.0,
+                    minZoom: 2.0,
+                    maxZoom: 12.0
+                });
+                
+                // Start animation
+                sphere.start();
+                
+                updateStatus();
+                
+                // Update status periodically
+                setInterval(updateStatus, 1000);
+                
+                console.log('WavesSphere initialized successfully!');
+                
+            } catch (error) {
+                console.error('Failed to initialize WavesSphere:', error);
+                document.getElementById('status').innerHTML = 'Error: ' + error.message;
+            }
+        }
+        
+        function updateStatus() {
+            const status = document.getElementById('status');
+            if (sphere && sphere.isInitialized()) {
+                const memory = sphere.getMemoryUsage();
+                const zoomLevel = Math.round(sphere.getZoomLevel() * 100);
+                
+                status.innerHTML = `
+                    Status: ${sphere.isRunning ? 'Running' : 'Stopped'}<br>
+                    Zoom: ${zoomLevel}%<br>
+                    Geometries: ${memory?.geometries || 'N/A'}<br>
+                    Render Calls: ${memory?.render?.calls || 'N/A'}
+                `;
+                
+                // Update zoom slider
+                document.getElementById('zoomSlider').value = zoomLevel;
+                document.getElementById('zoomLevel').textContent = zoomLevel + '%';
+            } else {
+                status.innerHTML = 'Not initialized';
+            }
+        }
+        
+        function setZoomFromSlider(value) {
+            if (sphere) {
+                sphere.setZoomLevel(value / 100, true);
+                document.getElementById('zoomLevel').textContent = value + '%';
+            }
+        }
+        
+        function toggleAutoRotate() {
+            if (sphere) {
+                autoRotateEnabled = !autoRotateEnabled;
+                sphere.updateConfig({ autoRotate: autoRotateEnabled });
+            }
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (sphere) {
+                sphere.onWindowResize();
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (sphere) {
+                sphere.destroy();
+            }
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
