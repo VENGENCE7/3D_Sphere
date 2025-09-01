@@ -56,8 +56,8 @@ export class SceneManager {
         this.controls.autoRotate = false;   // No auto-rotation
         
         // Zoom limits
-        this.controls.minDistance = 1.5; // Minimum zoom (close)
-        this.controls.maxDistance = 20.0; // Maximum zoom (far)
+        this.controls.minDistance = 1.95; // Minimum zoom (close)
+        this.controls.maxDistance = 15.0; // Maximum zoom (far)
         this.controls.zoomSpeed = 1.0;   // Zoom sensitivity
         
         // Target the center of the sphere
