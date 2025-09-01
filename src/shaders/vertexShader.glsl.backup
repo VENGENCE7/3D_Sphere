@@ -1,0 +1,908 @@
+uniform float uTime;
+uniform float uCameraDistance;
+
+attribute vec3 initialPosition;
+attribute float aRandom;
+
+varying vec3 vColor;
+varying float vIntensity;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+varying float vEdgeFade;
+varying float vDistortion;
+varying float vRadialDist;
+varying float vFoldDepth;
+
+const float radius = 1.5;
+const float PI = 3.14159265359;
+
+// ========================================
+// SIMPLEX NOISE FUNCTIONS - For organic membrane movement
+// ========================================
+vec3 mod289(vec3 x) {
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 mod289(vec4 x) {
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 permute(vec4 x) {
+    return mod289(((x * 34.0) + 1.0) * x);
+}
+
+vec4 taylorInvSqrt(vec4 r) {
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+float snoise(vec3 v) {
+    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    
+    vec3 i = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+    
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    
+    i = mod289(i);
+    vec4 p = permute(permute(permute(
+        i.z + vec4(0.0, i1.z, i2.z, 1.0))
+        + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+        + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    
+    vec4 s0 = floor(b0) * 2.0 + 1.0;
+    vec4 s1 = floor(b1) * 2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    
+    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+    
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+    
+    vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    
+    vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    m = m * m;
+    return 42.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+}
+
+// ========================================
+// ORGANIC MEMBRANE DEFORMATION - Soft, living surface movement
+// ========================================
+float createOrganicDeformation(vec3 p) {
+    float time = uTime;
+    
+    // =========================================
+    // === MASTER CONTROL PANEL ===
+    // Adjust these values to control the organic membrane movement
+    // =========================================
+    
+    // === TOGGLE SYSTEM ON/OFF ===
+    float ENABLE_ORGANIC_MOVEMENT = 1.0; // Set to 0.0 to disable all organic movement
+    
+    // === PRIMARY MOVEMENT CONTROLS ===
+    float MEMBRANE_SPEED = 0.3;        // Overall animation speed (0.1 = slow, 0.5 = fast, 1.0 = very fast)
+    float BULGE_AMPLITUDE = 0.12;      // Maximum bulge height (0.05 = subtle, 0.2 = pronounced)
+    float GROOVE_AMPLITUDE = -0.08;    // Maximum groove depth (-0.05 = shallow, -0.15 = deep)
+    
+    // === DEFORMATION SCALE CONTROLS ===
+    float NOISE_SCALE = 2.5;           // Size of primary deformations (1.0 = large, 5.0 = small)
+    float SECONDARY_SCALE = 5.0;       // Size of detail ripples (3.0 = large, 10.0 = tiny)
+    
+    // === MOTION CHARACTERISTICS ===
+    float PULSE_INTENSITY = 0.1;       // Bulge pulsing strength (0.0 = none, 0.3 = strong)
+    float BREATHE_INTENSITY = 0.1;     // Groove breathing strength (0.0 = none, 0.3 = strong)
+    float VERTEX_VARIATION = 0.3;      // Per-vertex randomization (0.0 = uniform, 1.0 = highly varied)
+    
+    // === NOISE LAYER WEIGHTS ===
+    float PRIMARY_WEIGHT = 0.6;        // Primary noise influence (0.0-1.0)
+    float DETAIL_WEIGHT = 0.4;         // Detail noise influence (0.0-1.0)
+    
+    // =========================================
+    // === END OF CONTROL PANEL ===
+    // =========================================
+    
+    if (ENABLE_ORGANIC_MOVEMENT < 0.5) {
+        return 0.0; // System disabled
+    }
+    
+    // Primary organic movement - large smooth bulges
+    vec3 noiseCoord = p * NOISE_SCALE;
+    float primaryNoise = snoise(noiseCoord + vec3(time * MEMBRANE_SPEED, 0.0, 0.0));
+    
+    // Add temporal variation for continuous flow
+    primaryNoise += snoise(noiseCoord + vec3(0.0, time * MEMBRANE_SPEED * 0.7, 0.0)) * 0.5;
+    primaryNoise += snoise(noiseCoord + vec3(0.0, 0.0, time * MEMBRANE_SPEED * 0.5)) * 0.3;
+    
+    // Secondary detail - smaller ripples
+    vec3 detailCoord = p * SECONDARY_SCALE;
+    float detailNoise = snoise(detailCoord + vec3(time * MEMBRANE_SPEED * 1.5, 0.0, 0.0)) * 0.3;
+    detailNoise += snoise(detailCoord + vec3(0.0, time * MEMBRANE_SPEED * 2.0, 0.0)) * 0.2;
+    
+    // Combine noises for organic movement with configurable weights
+    float totalNoise = primaryNoise * PRIMARY_WEIGHT + detailNoise * DETAIL_WEIGHT;
+    
+    // Create smooth bulges and grooves
+    float deformation = 0.0;
+    if (totalNoise > 0.0) {
+        // Bulge - smooth outward movement
+        deformation = totalNoise * BULGE_AMPLITUDE;
+        // Add configurable pulsing to bulges
+        deformation *= (1.0 + sin(time * 2.0 + totalNoise * PI) * PULSE_INTENSITY);
+    } else {
+        // Groove - smooth inward movement
+        deformation = totalNoise * abs(GROOVE_AMPLITUDE);
+        // Add configurable breathing to grooves
+        deformation *= (1.0 + cos(time * 1.5 + totalNoise * PI) * BREATHE_INTENSITY);
+    }
+    
+    // Add per-vertex randomization for more organic feel
+    float vertexVariation = sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 0.5 + 0.5;
+    deformation *= (1.0 - VERTEX_VARIATION + vertexVariation * VERTEX_VARIATION);
+    
+    // Ensure smooth, continuous motion
+    return deformation;
+}
+
+// Old wave system moved to oldWaveSystem.glsl
+float createFoldingWaves(vec3 p) {
+    return 0.0; // Disabled - using organic membrane instead
+}
+       // Base wave height (0.1 = subtle, 0.5 = tall)
+    float WAVE_MAX_AMPLITUDE = 2.2;   // Maximum height at clash (0.5 = low, 2.0 = very tall)
+    float WAVE_FORM = 1.0;            // Wave shape (0.5 = smooth, 1.0 = normal, 2.0 = sharp)
+    
+    // === WAVE TIMING SYSTEM ===
+    // The waves appear in sequence, creating a choreographed animation
+    // - Wave 1 Main: Every 10 seconds (circular expanding ring)
+    // - Wave 1 Secondary: 20-40 seconds in cycle (follow-up ring)
+    // - Wave 2 Main: Every 10 seconds (opposite circular ring)
+    // - Wave 2 Secondary: 20-40 seconds in cycle (opposite follow-up)
+    float totalCycle = 20.0; // 4 waves × 20 seconds each
+    float currentPhase = mod(time, totalCycle);
+    
+    float wave1_main = 0.0;
+    float wave1_secondary = 0.0;
+    float wave2_main = 0.0;        // Opposite wave from bottom-left
+    float wave2_secondary = 0.0;   // Opposite secondary wave
+    
+    // === WAVE 1 MAIN: Circular expanding ring (repeats every 10 seconds) ===
+    // This wave operates on its own 10-second cycle, independent of other waves
+    float mainWaveCycle = 4.0;  // Repeat every 10 seconds
+    float mainWavePhase = mod(time, mainWaveCycle);
+    
+    // Calculate clash detection parameters
+    vec3 origin1 = vec3(0.707, 0.707, 0.5);   // Wave 1 origin
+    vec3 origin2 = vec3(-0.707, -0.707, 0.65); // Wave 2 origin (opposite)
+    float clashDistance = length(origin1 - origin2); // Distance between origins
+    float clashPoint = clashDistance * 0.5; // Middle point where waves meet
+    
+    if (enableWave1Main > 0.0) {
+        // === WAVE PARAMETERS (Using global controls) ===
+        float expansionSpeed = WAVE_SPEED;     // Units per second (higher = faster)
+        float waveThickness = WAVE_THICKNESS;  // Ring thickness (higher = thicker ring)
+        float waveFrequency = WAVE_FREQUENCY;  // Oscillations (higher = more ripples)
+        float baseAmplitude = WAVE_AMPLITUDE;  // Starting wave height
+        float maxAmplitude = WAVE_MAX_AMPLITUDE; // Maximum wave height at clash
+        
+        float distFromOrigin1 = length(p - origin1);
+        float waveAge = mainWavePhase;  // Use independent 10-second cycle
+        float waveRadius = waveAge * expansionSpeed;
+        
+        // Check if wave has reached clash point and should dissolve
+        float maxRadius = clashPoint + waveThickness * 0.5; // Vanish right after clash point
+        
+        if (waveRadius < maxRadius) { // Only show wave before it vanishes at clash
+            float ringDistance = abs(distFromOrigin1 - waveRadius);
+            if (ringDistance < waveThickness) {
+                // Calculate growth factor - wave grows as it approaches clash point
+                float progressToClash = waveRadius / clashPoint; // 0 at start, 1 at clash
+                
+                // Exponential growth as wave approaches clash point
+                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
+                
+                // Sharp vanish at clash point
+                float clashFade = 1.0;
+                if (waveRadius > clashPoint * 0.95) { // Vanish very close to clash
+                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
+                }
+                
+                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
+                // Apply wave form control (1.0 = sine wave, higher = sharper peaks)
+                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
+                wave1_main = waveShape * intensity * growthFactor * enableWave1Main;
+            }
+        }
+    }
+    
+    // === WAVE 1 SECONDARY: Second ring from same origin (20-40 seconds) ===
+    else if (currentPhase >= 20.0 && currentPhase < 40.0 && enableWave1Secondary > 0.0) {
+        // === ORIGIN CONFIGURATION ===
+        // Uses same origin as Wave 1 Main for follow-up effect
+        // To use different origin, change these values:
+        vec3 origin1 = vec3(0.707, 0.707, 0.5);  // Same as Wave 1 Main
+        
+        // === WAVE PARAMETERS (Using global controls) ===
+        float expansionSpeed = WAVE_SPEED;     // Same speed as main wave
+        float waveThickness = WAVE_THICKNESS;  // Same thickness
+        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
+        float baseAmplitude = WAVE_AMPLITUDE * 0.67; // Starting amplitude for secondary (2/3 of main)
+        float maxAmplitude = WAVE_MAX_AMPLITUDE * 0.67; // Maximum height at clash (2/3 of main)
+        
+        float distFromOrigin1 = length(p - origin1);
+        float waveAge = currentPhase - 20.0;
+        float waveRadius = waveAge * expansionSpeed;
+        
+        // Vanish at clash point
+        float maxRadius = clashPoint + waveThickness * 0.5;
+        
+        if (waveRadius < maxRadius) {
+            float ringDistance = abs(distFromOrigin1 - waveRadius);
+            if (ringDistance < waveThickness) {
+                // Growth factor - wave grows as it approaches clash
+                float progressToClash = waveRadius / clashPoint;
+                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
+                
+                // Sharp vanish at clash
+                float clashFade = 1.0;
+                if (waveRadius > clashPoint * 0.95) {
+                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
+                }
+                
+                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
+                // Apply wave form control
+                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
+                wave1_secondary = waveShape * intensity * growthFactor * enableWave1Secondary;
+            }
+        }
+    }
+    
+    // === WAVE 2 MAIN: Opposite circular wave (repeats every 10 seconds) ===
+    // This wave comes from diagonally opposite position to create clash effect
+    if (enableWave2Main > 0.0) {
+        // === WAVE PARAMETERS (Using global controls) ===
+        float expansionSpeed = WAVE_SPEED;     // Same speed
+        float waveThickness = WAVE_THICKNESS;  // Same thickness
+        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
+        float baseAmplitude = WAVE_AMPLITUDE;  // Starting wave height
+        float maxAmplitude = WAVE_MAX_AMPLITUDE; // Maximum wave height at clash
+        
+        float distFromOrigin2 = length(p - origin2);
+        float waveAge = mainWavePhase;  // Use same 10-second cycle as Wave 1 Main
+        float waveRadius = waveAge * expansionSpeed;
+        
+        // Check if wave has reached clash point and should dissolve
+        float maxRadius = clashPoint + waveThickness * 0.5; // Vanish right after clash point
+        
+        if (waveRadius < maxRadius) { // Only show wave before it vanishes at clash
+            float ringDistance = abs(distFromOrigin2 - waveRadius);
+            if (ringDistance < waveThickness) {
+                // Calculate growth factor - wave grows as it approaches clash point
+                float progressToClash = waveRadius / clashPoint; // 0 at start, 1 at clash
+                
+                // Exponential growth as wave approaches clash point
+                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
+                
+                // Sharp vanish at clash point
+                float clashFade = 1.0;
+                if (waveRadius > clashPoint * 0.95) { // Vanish very close to clash
+                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
+                }
+                
+                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
+                // Apply wave form control
+                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
+                wave2_main = waveShape * intensity * growthFactor * enableWave2Main;
+            }
+        }
+    }
+    
+    // === WAVE 2 SECONDARY: Opposite follow-up wave (20-40 seconds) ===
+    else if (currentPhase >= 20.0 && currentPhase < 40.0 && enableWave2Secondary > 0.0) {
+        // === ORIGIN CONFIGURATION ===
+        // Same as Wave 2 Main (diagonally opposite to Wave 1)
+        vec3 origin2 = vec3(-0.707, -0.707, -0.5);  // Bottom-left-back quadrant
+        
+        // === WAVE PARAMETERS (Using global controls) ===
+        float expansionSpeed = WAVE_SPEED;     // Same speed
+        float waveThickness = WAVE_THICKNESS;  // Same thickness
+        float waveFrequency = WAVE_FREQUENCY;  // Same frequency
+        float baseAmplitude = WAVE_AMPLITUDE * 0.67; // Starting amplitude for secondary (2/3 of main)
+        float maxAmplitude = WAVE_MAX_AMPLITUDE * 0.67; // Maximum height at clash (2/3 of main)
+        
+        float distFromOrigin2 = length(p - origin2);
+        float waveAge = currentPhase - 20.0;
+        float waveRadius = waveAge * expansionSpeed;
+        
+        // Vanish at clash point
+        float maxRadius = clashPoint + waveThickness * 0.5;
+        
+        if (waveRadius < maxRadius) {
+            float ringDistance = abs(distFromOrigin2 - waveRadius);
+            if (ringDistance < waveThickness) {
+                // Growth factor - wave grows as it approaches clash
+                float progressToClash = waveRadius / clashPoint;
+                float growthFactor = baseAmplitude + (maxAmplitude - baseAmplitude) * pow(progressToClash, 2.0);
+                
+                // Sharp vanish at clash
+                float clashFade = 1.0;
+                if (waveRadius > clashPoint * 0.95) {
+                    clashFade = 1.0 - smoothstep(clashPoint * 0.95, maxRadius, waveRadius);
+                }
+                
+                float intensity = (1.0 - ringDistance / waveThickness) * clashFade;
+                // Apply wave form control
+                float waveShape = pow(abs(sin(ringDistance * waveFrequency)), WAVE_FORM);
+                wave2_secondary = waveShape * intensity * growthFactor * enableWave2Secondary;
+            }
+        }
+    }
+    
+    
+    // === WAVE INTERACTION: Detect when waves meet and create clash effects ===
+    // Sum all active waves (including opposite waves for clash)
+    float totalWave = wave1_main + wave1_secondary + wave2_main + wave2_secondary;
+    
+    // CLASH DETECTION: When multiple waves overlap, they interfere
+    // This creates more dramatic effects where waves meet
+    float activeWaves = 0.0;
+    if (abs(wave1_main) > 0.01) activeWaves += 1.0;      // Count if wave is active
+    if (abs(wave1_secondary) > 0.01) activeWaves += 1.0;  // Count if wave is active
+    if (abs(wave2_main) > 0.01) activeWaves += 1.0;      // Count opposite wave
+    if (abs(wave2_secondary) > 0.01) activeWaves += 1.0;  // Count opposite secondary
+    
+    // Amplify where waves clash (interference pattern)
+    // TO DISABLE CLASH AMPLIFICATION: Comment out this if block
+    if (activeWaves >= 2.0) {
+        totalWave *= 1.5; // 50% amplitude boost at intersection points
+    }
+    
+    // === EDGE BEHAVIOR: Makes sphere edges pull inward slightly ===
+    // TO DISABLE EDGE EFFECT: Comment out these 3 lines
+    float distanceFromCenter = length(p);
+    if (distanceFromCenter > 1.4) {  // Near the sphere edge (radius = 1.5)
+        totalWave *= -0.2; // Negative value creates inward pull
+    }
+    
+    // Clamp final displacement to maintain sphere shape
+    // -0.05 to 0.1 range keeps deformation subtle
+    return clamp(totalWave, -0.05, 0.1);
+}
+
+// ========================================
+// SECONDARY RIPPLES - Small fast-moving surface details
+// TO DISABLE: Return 0.0 at the beginning of this function
+// ========================================
+float createBendingWaves(vec3 p) {
+    // === RIPPLE TOGGLE - UNCOMMENT TO DISABLE ===
+    return 0.0;  // <-- UNCOMMENT THIS LINE TO TURN OFF RIPPLES
+    
+    // Convert position to spherical coordinates for wave patterns
+    float theta = atan(p.z, p.x);  // Horizontal angle
+    float phi = acos(p.y / max(length(p), 0.001));  // Vertical angle
+    float time = uTime;
+    
+    // === FAST-MOVING SURFACE RIPPLES ===
+    // These create small, quick waves across the surface
+    // Amplitude: 0.025 and 0.020 (very small)
+    float ripple1 = sin(theta * 8.0 + time * 3.0) * cos(phi * 6.0 - time * 2.5) * 0.025;
+    float ripple2 = cos(phi * 10.0 + time * 4.0) * sin(theta * 5.0 - time * 3.5) * 0.020;
+    
+    // === HIGH-FREQUENCY TEXTURE ===
+    // Creates a fine, animated surface texture
+    // Frequency: 15.0 (very tight pattern), Speed: 5.0, Amplitude: 0.015
+    float texture = sin((p.x + p.y + p.z) * 15.0 + time * 5.0) * 0.015;
+    
+    return ripple1 + ripple2 + texture;
+}
+
+// ========================================
+// ASYMMETRIC DISTORTION - Subtle random organic motion
+// TO DISABLE: Return 0.0 at the beginning of this function
+// ========================================
+float createAsymmetricDistortion(vec3 p) {
+    // === DISTORTION TOGGLE - UNCOMMENT TO DISABLE ===
+    // return 0.0;  // <-- UNCOMMENT THIS LINE TO TURN OFF DISTORTION
+    
+    float time = uTime;
+    
+    // === SLOW DRIFTING MOTION ===
+    // Creates organic, non-uniform movement across the sphere
+    // Very small amplitudes (0.008 and 0.006) for subtlety
+    float drift1 = sin(p.x * 2.0 + time * 0.8) * cos(p.y * 1.5 + time * 0.6) * 0.008;
+    float drift2 = cos(p.z * 2.5 + time * 0.4) * sin(p.x * 1.8 + time * 0.9) * 0.006;
+    
+    return drift1 + drift2;
+}
+
+// ========================================
+// MAIN SHAPE FUNCTION - Combines all deformation effects
+// This is the master function that creates the final sphere deformation
+// ========================================
+float createSphericalShape(vec3 p) {
+    float r = length(p);
+    float baseShape = radius - r;  // Basic sphere shape (radius = 1.5)
+    
+    // === DEFORMATION SYSTEM SELECTION ===
+    // Choose which systems to use (set to 1.0 to enable, 0.0 to disable)
+    float USE_ORGANIC_MEMBRANE = 1.0;  // New organic membrane system
+    float USE_OLD_WAVES = 0.0;         // Old wave system (disabled)
+    float USE_RIPPLES = 0.0;           // Fast surface ripples (disabled)
+    float USE_ASYMMETRIC = 0.0;        // Asymmetric distortion (disabled)
+    
+    // === COMBINE DEFORMATION SYSTEMS ===
+    float organicDeform = createOrganicDeformation(p) * USE_ORGANIC_MEMBRANE;
+    float foldingWaves = createFoldingWaves(p) * USE_OLD_WAVES;
+    float bendingWaves = createBendingWaves(p) * USE_RIPPLES;
+    float asymmetric = createAsymmetricDistortion(p) * USE_ASYMMETRIC;
+    
+    // Sum all active displacements
+    float totalDisplacement = organicDeform + foldingWaves + bendingWaves + asymmetric;
+    
+    // === DISPLACEMENT LIMITER ===
+    // Prevents extreme deformation to maintain recognizable sphere shape
+    // Range: -0.25 to +0.25 units for organic movement
+    totalDisplacement = clamp(totalDisplacement, -0.25, 0.25);
+    
+    return baseShape + totalDisplacement;
+}
+
+// Removed shadow occlusion calculation - no shadows needed
+
+void main() {
+    vec3 pos = initialPosition;
+    vec3 originalNormal = normalize(pos);
+    
+    // Get the main shape displacement
+    float shapeDisplacement = createSphericalShape(pos);
+    float totalDisplacement = shapeDisplacement;
+    
+    // Apply displacement along the normal
+    vec3 displaced = pos + originalNormal * totalDisplacement;
+    
+    // Store fold depth for fragment shader
+    vFoldDepth = createFoldingWaves(pos);
+    vRadialDist = length(displaced) / radius;
+    
+    // Calculate edge fade - ensure no black at meridian
+    vec3 viewDir = normalize(cameraPosition - displaced);
+    float edgeFactor = abs(dot(originalNormal, viewDir)); 
+    // Minimum fade of 0.7 to prevent black strips
+    vEdgeFade = max(0.7, smoothstep(0.1, 0.9, edgeFactor));
+    
+    // For a complete sphere with colors on both sides, we don't want to make back faces black
+    // Instead, we'll treat both sides the same
+    float isBackFacing = 0.0; // Disabled - treat all surfaces the same
+    
+    // Reduced fade in deep folds to maintain visibility
+    if (vFoldDepth < -0.15) {
+        float foldFade = 1.0 + vFoldDepth * 1.5; // Reduced from 3.0
+        vEdgeFade *= max(foldFade, 0.6); // Minimum 0.6 (was 0.2)
+    }
+    
+    vDistortion = totalDisplacement;
+    
+    // Calculate perturbed normal
+    vec3 tangent1 = normalize(cross(originalNormal, vec3(0.0, 1.0, 0.0)));
+    if (length(tangent1) < 0.01) {
+        tangent1 = normalize(cross(originalNormal, vec3(1.0, 0.0, 0.0)));
+    }
+    vec3 tangent2 = normalize(cross(originalNormal, tangent1));
+    
+    float epsilon = 0.01;
+    vec3 posT1 = pos + tangent1 * epsilon;
+    vec3 posT2 = pos + tangent2 * epsilon;
+    float dispT1 = createSphericalShape(posT1);
+    float dispT2 = createSphericalShape(posT2);
+    
+    vec3 perturbedNormal = normalize(originalNormal + 
+        tangent1 * (dispT1 - shapeDisplacement) * 30.0 + 
+        tangent2 * (dispT2 - shapeDisplacement) * 30.0);
+    
+    vNormal = perturbedNormal;
+    vWorldPos = displaced;
+    
+    // Transform to world space
+    vec4 worldPos4 = modelMatrix * vec4(displaced, 1.0);
+    vec3 worldPosition = worldPos4.xyz;
+    vec3 worldNormal = normalize((modelMatrix * vec4(perturbedNormal, 0.0)).xyz);
+    
+   
+    
+    // === ECLIPSE-STYLE RADIAL GRADIENT ===
+    // Eclipse color palette with smooth blending colors
+    vec3 centerBlack = vec3(0.078, 0.098, 0.086); // #141916 - Center black
+    vec3 deepViolet = vec3(0.12, 0.0, 0.30);      // #1F004D - Deep violet core
+    vec3 purple = vec3(0.35, 0.0, 0.7);           // #5900B3 - Rich purple
+    vec3 darkBlue = vec3(0.1, 0.0, 0.59);         // #190096 - Dark blue
+    vec3 blue = vec3(0.26, 0.0, 0.93);            // #4200EE - Blue
+    vec3 magenta = vec3(0.6, 0.0, 0.6);           // #9900CC - True magenta
+    vec3 pink = vec3(0.85, 0.15, 0.45);           // #D9266B - Vivid pink
+    vec3 red = vec3(1.0, 0.1, 0.2);               // #FF1A33 - Bright red
+    vec3 orange = vec3(1.0, 0.4, 0.0);            // #FF6600 - Pure orange
+    vec3 goldenYellow = vec3(1.0, 0.8, 0.2);      // #FFCC33 - Golden yellow
+    vec3 brightGold = vec3(1.0, 0.9, 0.4);        // #FFE566 - Bright gold corona
+    vec3 coronaGlow = vec3(1.0, 1.0, 0.5);        // Light golden corona
+    
+    // Additional colors for lower half gradient
+    vec3 whiteStripe = vec3(1.0, 1.0, 1.0);       // White thin band
+    vec3 brightRed = vec3(1.0, 0.106, 0.09);      // #ff1b17 - Bright red
+    vec3 deepPurple = vec3(0.11, 0.0, 0.204);     // rgba(28,0,52) - Deep purple
+    vec3 winePurple = vec3(0.318, 0.063, 0.188);  // #511030 - Wine purple
+    
+    // === CORONA & WARM GRADIENT CONFIGURATION ===
+    // ADJUST THESE VALUES TO CHANGE CORONA AND WARM COLOR COVERAGE:
+    float CORONA_TOP_COVERAGE = 0.10;    // 10% coverage at top (Y-axis) - full thickness
+    float CORONA_BOTTOM_COVERAGE = 0.02; // 2% coverage at bottom (Y-axis) - full thickness
+    float CORONA_EQUATOR_THINNING = 0.01; // Corona thickness at equator sides (1% of rim = extremely thin line)
+    
+    // Warm gradient (red/orange/golden) thickness configuration
+    float WARM_GRADIENT_TOP_START = 0.68;    // Where warm colors start on top (68% = more cool colors)
+    float WARM_GRADIENT_BOTTOM_START = 0.70; // Where warm colors start on bottom (70% = even more cool colors)
+    float WARM_GRADIENT_EQUATOR_COMPRESSION = 0.5; // How much to compress warm colors at equator (0.5 = 50% thinner)
+    // =============================
+    
+    // Calculate rim factor for eclipse effect
+    vec3 worldViewDir = normalize(cameraPosition - worldPosition);
+    float rimFactor = 1.0 - abs(dot(perturbedNormal, worldViewDir)); // 0 at center, 1 at edges
+    
+    // Smooth rim detection for gradient
+    float eclipseRim = pow(rimFactor, 1.0); // Balanced power for symmetric gradient
+    
+    // Calculate vertical position
+    float verticalPosition = worldNormal.y; // -1 at bottom, 0 at equator, 1 at top
+    
+    // Check if we're viewing from the front
+    float frontFacing = max(0.0, dot(worldViewDir, vec3(0.0, 0.0, 1.0)));
+    
+    // Simple symmetric eclipse factor - same for both halves
+    // Only the corona band will have variable thickness
+    float eclipseFactor = eclipseRim;
+    
+    // Smooth the eclipse factor to prevent banding
+    eclipseFactor = smoothstep(0.0, 1.0, eclipseFactor);
+    
+    // === ASYMMETRIC COLOR GRADIENT WITH SMOOTH EQUATOR BLENDING ===
+    vec3 color = centerBlack; // Start with center black color
+    
+    // Calculate smooth blending factor for equator transition
+    // -0.3 to 0.3 is the blending zone
+    float equatorBlend = smoothstep(-0.3, 0.3, verticalPosition); // 0 = lower, 1 = upper
+    
+    // Calculate warm gradient compression based on position
+    float equatorProximity = 1.0 - abs(verticalPosition); // 1 at equator, 0 at poles
+    float warmGradientCompression = mix(1.0, WARM_GRADIENT_EQUATOR_COMPRESSION, 
+                                       smoothstep(0.0, 0.8, equatorProximity));
+    
+    // Calculate both color gradients
+    vec3 upperColor = centerBlack;
+    vec3 lowerColor = centerBlack;
+    
+    // === UPPER GRADIENT - Full color spectrum ===
+    // Center Black → Deep Violet (0.0-0.25)
+    if (eclipseFactor > 0.0) {
+        float t = smoothstep(0.0, 0.25, eclipseFactor);
+        upperColor = mix(centerBlack, deepViolet, t);
+    }
+    
+    // Deep Violet → Purple (0.20-0.35)
+    if (eclipseFactor > 0.20) {
+        float t = smoothstep(0.20, 0.35, eclipseFactor);
+        upperColor = mix(upperColor, purple, t * 0.9);
+    }
+    
+    // Purple → Dark Blue (0.30-0.45)
+    if (eclipseFactor > 0.30) {
+        float t = smoothstep(0.30, 0.45, eclipseFactor);
+        upperColor = mix(upperColor, darkBlue, t * 0.85);
+    }
+    
+    // Dark Blue → Blue (0.40-0.55)
+    if (eclipseFactor > 0.40) {
+        float t = smoothstep(0.40, 0.55, eclipseFactor);
+        upperColor = mix(upperColor, blue, t * 0.9);
+    }
+    
+    // Blue → Magenta (0.50-0.65)
+    if (eclipseFactor > 0.50) {
+        float t = smoothstep(0.50, 0.65, eclipseFactor);
+        upperColor = mix(upperColor, magenta, t * 0.95);
+    }
+    
+    // Magenta → Pink (0.60-0.72)
+    if (eclipseFactor > 0.60) {
+        float t = smoothstep(0.60, 0.72, eclipseFactor);
+        upperColor = mix(upperColor, pink, t * 0.9);
+    }
+    
+    // Apply warm gradient compression for upper hemisphere
+    float warmStartUpper = mix(WARM_GRADIENT_TOP_START, 0.85, 1.0 - warmGradientCompression);
+    
+    // Pink → Red (compressed based on position)
+    if (eclipseFactor > warmStartUpper) {
+        float redEnd = warmStartUpper + 0.10 * warmGradientCompression;
+        float t = smoothstep(warmStartUpper, redEnd, eclipseFactor);
+        upperColor = mix(upperColor, red, t * 0.95);
+    }
+    
+    // Red → Orange (compressed)
+    if (eclipseFactor > warmStartUpper + 0.06 * warmGradientCompression) {
+        float orangeStart = warmStartUpper + 0.06 * warmGradientCompression;
+        float orangeEnd = warmStartUpper + 0.11 * warmGradientCompression;
+        float t = smoothstep(orangeStart, orangeEnd, eclipseFactor);
+        upperColor = mix(upperColor, orange, t * 0.85);
+    }
+    
+    // Orange → Golden Yellow (compressed)
+    if (eclipseFactor > warmStartUpper + 0.11 * warmGradientCompression) {
+        float goldenStart = warmStartUpper + 0.11 * warmGradientCompression;
+        float goldenEnd = min(0.90, warmStartUpper + 0.22 * warmGradientCompression);
+        float t = smoothstep(goldenStart, goldenEnd, eclipseFactor);
+        upperColor = mix(upperColor, goldenYellow, t * 0.9);
+    }
+    
+    // === LOWER GRADIENT - Linear from center to rim ===
+    // When viewed from front in 2D, gradient goes from center outward to rim
+    
+    // Calculate front-center restriction for special bands
+    // Bands should appear in front center, not at edges
+    float frontCenterFactor = 1.0;
+    
+    // Check if point is in front (positive Z) and near center (low X)
+    float frontness = smoothstep(-0.3, 0.3, worldNormal.z); // 1 when facing front, 0 at sides/back
+    float centerness = 1.0 - smoothstep(0.0, 0.7, abs(worldNormal.x)); // 1 at center, 0 at sides
+    
+    // Combine to create bands that appear in front-center area only
+    float bandVisibility = frontness * centerness;
+    
+    // For radial distance-based bands (appear at specific distance from center)
+    float radialDistance = length(vec2(worldNormal.x, worldNormal.z)); // Distance from Y-axis
+    float bandRadialFactor = smoothstep(0.2, 0.6, radialDistance) * (1.0 - smoothstep(0.7, 0.95, radialDistance));
+    
+    // Check if we're in the special band region (10 degrees below equator, covering 25% of lower half)
+    float specialBandStart = -0.174; // 10 degrees below equator
+    float specialBandEnd = -0.425;   // 25% into lower half
+    float inSpecialBandRegion = smoothstep(specialBandEnd - 0.05, specialBandEnd, verticalPosition) * 
+                                smoothstep(specialBandStart + 0.05, specialBandStart, verticalPosition);
+    
+    // Dark base: Center Black → Deep Violet (0.0-0.30)
+    if (eclipseFactor > 0.0) {
+        float t = smoothstep(0.0, 0.30, eclipseFactor);
+        lowerColor = mix(centerBlack, deepViolet, t);
+    }
+    
+    // === SPECIAL BANDS SECTION (positioned 10° below equator, 25% height) ===
+    // These bands appear in front-center area, not at edges
+    
+    // Deep Violet → Magenta (0.30-0.40) - front-center only, in special region
+    if (eclipseFactor > 0.30 && eclipseFactor < 0.40 && inSpecialBandRegion > 0.0) {
+        float t = smoothstep(0.30, 0.40, eclipseFactor);
+        // Use bandRadialFactor to position bands at mid-radius, not edges
+        float magentaStrength = t * bandRadialFactor * inSpecialBandRegion * bandVisibility;
+        lowerColor = mix(lowerColor, magenta, magentaStrength * 0.9);
+    }
+    
+    // Magenta → White thin stripe (0.40-0.42) - front-center only, very thin
+    if (eclipseFactor > 0.40 && eclipseFactor < 0.42 && inSpecialBandRegion > 0.0) {
+        float t = smoothstep(0.40, 0.42, eclipseFactor);
+        // Position in front-center area
+        float whiteStrength = t * bandRadialFactor * inSpecialBandRegion * bandVisibility;
+        lowerColor = mix(lowerColor, whiteStripe, whiteStrength * 0.85);
+    }
+    
+    // White → Bright Red #ff1b17 (0.42-0.50) - front-center only
+    if (eclipseFactor > 0.42 && eclipseFactor < 0.50 && inSpecialBandRegion > 0.0) {
+        float t = smoothstep(0.42, 0.50, eclipseFactor);
+        // Position in front-center area
+        float redStrength = t * bandRadialFactor * inSpecialBandRegion * bandVisibility;
+        lowerColor = mix(lowerColor, brightRed, redStrength * 0.9);
+    }
+    
+    // Bright Red → Deep Purple rgba(28,0,52) (0.50-0.58) - front-center area
+    if (eclipseFactor > 0.50 && eclipseFactor < 0.58 && inSpecialBandRegion > 0.0) {
+        float t = smoothstep(0.50, 0.58, eclipseFactor);
+        // Slightly wider coverage for purple
+        float purpleStrength = t * inSpecialBandRegion * bandVisibility * 
+                              (bandRadialFactor * 0.7 + 0.3);
+        lowerColor = mix(lowerColor, deepPurple, purpleStrength * 0.85);
+    }
+    
+    // === CONTINUE REGULAR GRADIENT ===
+    
+    // Deep Purple/Deep Violet → Wine Purple #511030 (0.58-0.68) - full width
+    if (eclipseFactor > 0.58) {
+        float t = smoothstep(0.58, 0.68, eclipseFactor);
+        lowerColor = mix(lowerColor, winePurple, t * 0.9);
+    }
+    
+    // Apply warm gradient compression for final corona colors
+    float warmStartLower = mix(0.68, 0.88, 1.0 - warmGradientCompression);
+    
+    // Wine Purple → Red (transition to corona colors)
+    if (eclipseFactor > warmStartLower) {
+        float redEnd = warmStartLower + 0.10 * warmGradientCompression;
+        float t = smoothstep(warmStartLower, redEnd, eclipseFactor);
+        lowerColor = mix(lowerColor, red, t * 0.85);
+    }
+    
+    // Red → Golden Yellow (approaching corona)
+    if (eclipseFactor > warmStartLower + 0.10 * warmGradientCompression) {
+        float goldenStart = warmStartLower + 0.10 * warmGradientCompression;
+        float goldenEnd = min(0.98, warmStartLower + 0.28 * warmGradientCompression);
+        float t = smoothstep(goldenStart, goldenEnd, eclipseFactor);
+        lowerColor = mix(lowerColor, goldenYellow, t * 0.9);
+    }
+    
+    // === SMOOTH BLENDING AT EQUATOR ===
+    // Blend between upper and lower gradients based on vertical position
+    if (verticalPosition > 0.3) {
+        // Pure upper gradient
+        color = upperColor;
+    } else if (verticalPosition < -0.3) {
+        // Pure lower gradient
+        color = lowerColor;
+    } else {
+        // Smooth blend zone at equator
+        color = mix(lowerColor, upperColor, equatorBlend);
+    }
+    
+    // === GOLDEN CORONA BAND - VARIABLE THICKNESS ===
+    // The corona band appears only at the rim with variable thickness
+    // Top/Bottom: Full thickness | Sides: Thin line based on configuration
+    
+    // Calculate base corona width based on vertical position
+    float baseCoronaWidth;
+    if (verticalPosition > 0.0) {
+        // TOP HALF - uses CORONA_TOP_COVERAGE
+        baseCoronaWidth = CORONA_TOP_COVERAGE;
+    } else {
+        // BOTTOM HALF - uses CORONA_BOTTOM_COVERAGE
+        baseCoronaWidth = CORONA_BOTTOM_COVERAGE;
+    }
+    
+    // Calculate thinning based on both X position (sides) and proximity to equator
+    float sidePosition = abs(worldNormal.x); // 0 at front/back, 1 at left/right sides
+    float coronaEquatorProximity = 1.0 - abs(verticalPosition); // 1 at equator, 0 at poles
+    
+    // Combine side and equator factors for maximum thinning effect
+    // More aggressive thinning near equator AND at sides
+    float thinningFactor = max(sidePosition, coronaEquatorProximity * 0.8);
+    
+    // Calculate corona width with smooth transition
+    float coronaWidth;
+    if (thinningFactor > 0.2) {
+        // Smooth transition from full thickness to thin line
+        // Using CORONA_EQUATOR_THINNING as the target thickness
+        float targetThinness = CORONA_EQUATOR_THINNING / baseCoronaWidth; // Convert to ratio
+        float actualThinning = mix(1.0, targetThinness, smoothstep(0.2, 0.8, thinningFactor));
+        coronaWidth = baseCoronaWidth * actualThinning;
+    } else {
+        // Full thickness away from equator and sides
+        coronaWidth = baseCoronaWidth;
+    }
+    
+    // Ensure minimum visibility
+    coronaWidth = max(coronaWidth, 0.002); // Minimum 0.2% width for visibility
+    
+    // Calculate threshold
+    float coronaStartThreshold = 1.0 - coronaWidth;
+    
+    // Orange → Golden Yellow (only in corona band)
+    if (eclipseFactor > coronaStartThreshold) {
+        float coronaProgress = (eclipseFactor - coronaStartThreshold) / coronaWidth;
+        
+        // First 40% of corona band: transition to golden yellow
+        if (coronaProgress < 0.4) {
+            float t = smoothstep(0.0, 0.4, coronaProgress);
+            color = mix(color, goldenYellow, t);
+        }
+        
+        // 40-70% of corona band: golden yellow to bright gold
+        if (coronaProgress > 0.3) {
+            float t = smoothstep(0.3, 0.7, coronaProgress);
+            color = mix(color, brightGold, t);
+        }
+        
+        // 70-100% of corona band: bright gold to corona glow
+        if (coronaProgress > 0.6) {
+            float t = smoothstep(0.6, 1.0, coronaProgress);
+            vec3 enhancedCorona = coronaGlow * 1.2;
+            color = mix(color, enhancedCorona, t);
+        }
+    }
+    
+    // === ADDITIONAL CORONA HIGHLIGHTS ===
+    // Extra glow effects for wave peaks within the corona band
+    if (eclipseFactor > coronaStartThreshold) {
+        // Golden highlights on wave peaks
+        if (totalDisplacement > 0.03) { 
+            float peakBoost = smoothstep(0.03, 0.08, totalDisplacement);
+            vec3 intenseGold = vec3(1.0, 0.9, 0.4);
+            color = mix(color, intenseGold, peakBoost * 0.5);
+        }
+        
+        // Extra brightness at the very edge
+        if (eclipseFactor > 0.95) {
+            float edgeGlow = smoothstep(0.95, 1.0, eclipseFactor);
+            vec3 edgeColor = vec3(1.0, 0.95, 0.6);
+            color = mix(color, edgeColor, edgeGlow * 0.4);
+        }
+    } 
+    // No shadow modulation - keep colors at full brightness
+    
+    // Full intensity for brighter appearance (no shadow reduction)
+    vIntensity = 1.0;
+    
+    // No brightness boost - keep original color values
+    // color = color * 1.0;
+    
+    // Both sides of sphere get full color treatment
+    vColor = color;
+    
+    // Screen position
+    vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
+    
+    // Uniform point sizing - no variation to maintain coverage
+    float baseSize = 6.0; // Increased from 8.0 to 16.0 for 2x larger dot diameter
+    
+    // No fold size variation - keep dots same size everywhere
+    float foldSize = 1.0;
+    
+    // No shadow sizing - uniform dot size
+    float shadowSize = 1.0;
+    
+    // No edge size reduction - keep full size at edges
+    float edgeSize = 1.0;
+    
+    // Minimal random variation for organic look
+    float randomSize = 0.95 + aRandom * 0.1; // Very slight variation (0.95-1.05)
+    
+    // No distance-based sizing - keep uniform
+    float distSize = 1.0;
+    
+    // Dynamic perspective scaling based on camera distance
+    // Dots get smaller when zoomed in (closer), larger when zoomed out (farther)
+    float screenScale = 6.0; // Base scaling factor
+    
+    // Inverse relationship: closer camera = smaller dots, farther camera = larger dots
+    // Using square root for more gradual scaling
+    float zoomFactor = sqrt(uCameraDistance / 3.5); // 3.5 is default camera distance
+    float perspectiveScale = screenScale * zoomFactor;
+    
+    // Apply all factors with camera-based perspective scaling
+    gl_PointSize = baseSize * foldSize * shadowSize * edgeSize * randomSize * distSize * perspectiveScale;
+    
+    // Stricter clamping to prevent overlap at far distances
+    gl_PointSize = clamp(gl_PointSize, 1.0, 12.0); // Increased from 1.5-12.0 to 3.0-24.0 for 2x larger dots
+    
+    gl_Position = projectionMatrix * mvPosition;
+}
