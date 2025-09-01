@@ -11,21 +11,24 @@ void main() {
     vec2 center = gl_PointCoord - vec2(0.5);
     float dist = length(center);
     
-    // Base threshold for dots
-    float edgeThreshold = 0.45 + vEdgeFade * 0.05;
+    // Sharper, cleaner dots with consistent size
+    float edgeThreshold = 0.48; // Fixed threshold for crisp edges
     
-    // No modification based on fold depth - keep dots uniform
-    // edgeThreshold stays constant
+    // Hard edge cutoff for clarity
+    if (dist > 0.5) discard;
     
-    // No scattering - keep all dots visible for full coverage
+    // Sharper alpha falloff for cleaner dots
+    float alpha;
+    if (dist < 0.35) {
+        // Solid center
+        alpha = 1.0;
+    } else {
+        // Sharp falloff at edges
+        alpha = smoothstep(0.5, 0.35, dist);
+    }
     
-    if (dist > edgeThreshold) discard;
-    
-    // Smooth alpha falloff
-    float alpha = smoothstep(edgeThreshold, edgeThreshold * 0.3, dist);
-    
-    // Minimal edge fade to maintain visibility
-    alpha *= pow(vEdgeFade, 0.1); // Very gentle fade
+    // Strong edge fade for better definition
+    alpha *= pow(vEdgeFade, 0.05); // Much less fade for clarity
     
     // No additional fading - keep dots fully visible everywhere
     
@@ -36,19 +39,16 @@ void main() {
     
     // No rim glow - keep colors pure
     
-    // Very subtle color variation for organic look
+    // Minimal color variation for cleaner look
     float colorVar = sin(vWorldPos.x * 10.0) * cos(vWorldPos.y * 9.0) * sin(vWorldPos.z * 11.0);
-    colorVar = colorVar * 0.02 + 1.0; // Reduced from 0.03
+    colorVar = colorVar * 0.01 + 1.0; // Very subtle variation
     dotColor *= colorVar;
     
-    // Add black border effect
-    float borderWidth = 0.16; // Width of the black border
-    float borderStart = edgeThreshold - borderWidth;
-    
-    if (dist > borderStart) {
-        // Create smooth transition to black at the edge
-        float borderFactor = smoothstep(borderStart, edgeThreshold, dist);
-        dotColor = mix(dotColor, vec3(0.0, 0.0, 0.0), borderFactor * 0.8); // 80% black blend
+    // Crisp dot with subtle darkening at edges
+    if (dist > 0.4) {
+        // Subtle darkening for depth
+        float edgeDarkening = smoothstep(0.4, 0.5, dist);
+        dotColor = mix(dotColor, dotColor * 0.7, edgeDarkening);
     }
     
     // No depth adjustment - keep colors consistent

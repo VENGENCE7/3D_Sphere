@@ -423,24 +423,29 @@ void main() {
     // Screen position and point sizing
     vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
     
-    float baseSize = 2.0;
+    float baseSize = 6.0;
     float randomSize = 0.95 + aRandom * 0.1;
     
-    // Modified zoom scaling: stronger reduction when zoomed out
-    float zoomFactor = uCameraDistance / 3.5;
+    // Zoom scaling with proper dot size adjustment
+    // Camera distance ranges from 2.0 (close) to 15.0 (far)
+    float zoomFactor = uCameraDistance / 3.5; // Normalize to default distance
     
-    // Apply different scaling based on zoom level
+    // Apply scaling based on zoom level (now relative to baseSize)
     float perspectiveScale;
-    if (zoomFactor <= 1.0) {
-        // Zoomed in (closer than default) - keep current perfect size
-        perspectiveScale = 6.0 * sqrt(zoomFactor);
+    if (uCameraDistance <= 2.0) {
+        // Maximum zoom in - make dots 200% larger (2x the default)
+        perspectiveScale = 2.0;  // Will be multiplied by baseSize
+    } else if (uCameraDistance <= 3.5) {
+        // Zoomed in (closer than default) - scale up smoothly
+        float t = (3.5 - uCameraDistance) / 1.5; // 0 at 3.5, 1 at 2.0
+        perspectiveScale = 1.0 + (1.0 * t); // Interpolate from 1.0 to 2.0
     } else {
-        // Zoomed out (farther than default) - reduce size more (25% extra reduction)
-        perspectiveScale = 6.0 * sqrt(zoomFactor) * 0.75;  // 0.75 = 25% smaller
+        // Zoomed out (farther than default) - scale down based on distance
+        perspectiveScale = sqrt(3.5 / uCameraDistance) * 0.8;
     }
     
-    gl_PointSize = baseSize * randomSize * perspectiveScale;
-    gl_PointSize = clamp(gl_PointSize, 0.05, 9.0);
+    gl_PointSize = baseSize * perspectiveScale * randomSize;
+    gl_PointSize = clamp(gl_PointSize, 0.5, 20.0); // Increased max size for close zoom
     
     gl_Position = projectionMatrix * mvPosition;
 }

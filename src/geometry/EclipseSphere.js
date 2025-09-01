@@ -24,7 +24,7 @@ export class EclipseSphere {
         const points = [];
         
         // === HEXAGONAL PACKING PATTERN - FULL SPHERE FOR INTERACTIVE VIEWING ===
-        const latLines = 240;  // Number of latitude lines
+        const latLines = 280;  // Increased for better clarity and density
         
         const hexRowHeight = Math.PI / latLines;
         
