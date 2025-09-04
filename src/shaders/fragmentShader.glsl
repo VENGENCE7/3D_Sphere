@@ -1,11 +1,6 @@
 varying vec3 vColor;
-varying float vIntensity;
-varying vec3 vNormal;
 varying vec3 vWorldPos;
 varying float vEdgeFade;
-varying float vDistortion;
-varying float vRadialDist;
-varying float vFoldDepth;
 
 void main() {
     vec2 center = gl_PointCoord - vec2(0.5);

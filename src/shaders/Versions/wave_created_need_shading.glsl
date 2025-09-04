@@ -341,24 +341,13 @@ void main() {
     vec3 winePurple = vec3(0.318, 0.063, 0.188);    // #511030 - Wine purple
     vec3 brightPink = vec3(0.980, 0.067, 0.251);    // #FA1140 - Bright pink (new)
     vec3 pinkMagenta = vec3(0.902, 0.278, 0.694);   // #E647B1 - Pink magenta (updated)
-    vec3 softPink = vec3(0.894, 0.792, 0.863);      // #E4CADC - Soft pink
+    vec3 softPink = vec3(0.894, 0.792, 0.863);      // #E4CADC - Soft pink (replaces white)
     vec3 darkViolet = vec3(0.102, 0.0, 0.212);      // #1A0036 - Dark violet (replaces magentaPink)
     vec3 deepDark = vec3(0.039, 0.0, 0.129);        // #0A0021 - Deep dark (final color)
     vec3 deepIndigo2 = vec3(0.137, 0.024, 0.212);   // #230636 - Deep indigo 2
     vec3 brightRedOrange = vec3(0.973, 0.271, 0.153); // #F84527 - Bright red-orange (before golden glow)
     vec3 redOrange = vec3(1.0, 0.325, 0.184);       // #FF532F - Red-orange for south pole
     vec3 transitionBlack = vec3(0.051, 0.0, 0.137); // #0D0023 - Transition black for lower hemisphere
-    
-    // === NEW WAVE GRADIENT COLORS ===
-    vec3 deepEquatorPurple = vec3(0.098, 0.0, 0.22); // #190038 - Deep purple for equator transition
-    vec3 brightMagenta = vec3(0.733, 0.129, 0.612);  // #BB219C - Top of wave gradient
-    vec3 vibrantPink = vec3(0.863, 0.298, 0.647);   // #DC4CA5 - Vibrant pink before red
-    vec3 waveRed = vec3(1.0, 0.102, 0.176);          // #FF1A2D - Main dip color (left side)
-    vec3 deepWine = vec3(0.396, 0.067, 0.216);       // #651137 - Deep wine after red
-    vec3 darkPurple = vec3(0.2, 0.043, 0.239);       // #330B3D - Transition from red
-    vec3 mediumPurple = vec3(0.416, 0.075, 0.545);   // #6A138B - Lower gradient
-    vec3 lighterPurple = vec3(0.537, 0.176, 0.706);  // #892DB4 - Right side dip color
-    vec3 equatorViolet = vec3(0.533, 0.016, 1.0);    // #8804FF - Bright violet for equator rim
     
     // === USE ORIGINAL NORMALS FOR COLOR CALCULATION ===
     // This prevents deformation from affecting color selection
@@ -505,101 +494,53 @@ void main() {
     // === CONFIGURABLE WAVE PARAMETERS ===
     // Adjust these to control wave position and shape
     float WAVE_START_WIDTH = 0.1;   // Initial width of wave (as fraction of PI)
-    float WAVE_END_WIDTH = 0.3;      // Final width at wave end (as fraction of PI)
-    
-    // === WAVE MOVEMENT CONTROLS ===
-    // UP/DOWN MOVEMENT CONTROLS
-    float WAVE_VERTICAL_ENABLED = 0.0;      // Master control: 0.0 = no vertical movement, 1.0 = full vertical movement
-    float WAVE_VERTICAL_SPEED = 0.3;        // Speed of up/down oscillation (optimized for 60fps)
-    float WAVE_VERTICAL_AMPLITUDE = 0.01;   // How far wave moves up/down (0.0 = none, 0.2 = large)
-    float WAVE_VERTICAL_COMPLEXITY = 1.0;   // Complexity of vertical movement (1.0 = simple, 4.0 = complex)
-    
-    // HORIZONTAL OSCILLATION CONTROLS (wave stays in front, oscillates left-right)
-    float WAVE_HORIZONTAL_ENABLED = 1.0;    // Enable horizontal oscillation (0.0 = off, 1.0 = on)
-    float WAVE_HORIZONTAL_SPEED = 0.2;      // Speed of left-right oscillation (smooth 60fps)
-    float WAVE_HORIZONTAL_AMPLITUDE = 0.08; // How far wave moves left-right (as fraction of front area)
-    float WAVE_HORIZONTAL_WAVINESS = 2.0;   // Number of waves in the oscillation pattern
-    
-    // LATERAL/HORIZONTAL MOVEMENT CONTROLS  
-    float WAVE_LATERAL_SPEED = 0.35;         // Speed of side-to-side flow (optimized for 60fps)
-    float WAVE_LATERAL_AMPLITUDE = 0.06;    // How far wave shifts laterally (reduced for smoothness)
-    
-    // ORGANIC FLOW CONTROLS (optimized for 60fps)
-    float WAVE_ORGANIC_INTENSITY = 0.9;     // Overall organic movement intensity (reduced for smoothness)
-    float WAVE_FLOW_SPEED_1 = 0.25;         // Primary organic flow speed (halved for 60fps)
-    float WAVE_FLOW_SPEED_2 = 0.15;         // Secondary organic flow speed (optimized)  
-    float WAVE_PULSE_SPEED = 0.4;           // Pulsing rhythm speed (reduced for smoothness)
-    
-    // BREATHING/PULSING CONTROLS (60fps optimized)
-    float WAVE_BREATHING_SPEED = 0.5;       // Speed of breathing effect (much slower for smoothness)
-    float WAVE_BREATHING_INTENSITY = 0.15;  // Intensity of breathing (reduced for subtlety)
-    
-    // WIDTH VARIATION CONTROLS (60fps optimized)
-    float WAVE_WIDTH_VARIATION = 0.2;       // How much wave width varies (reduced)
-    float WAVE_WIDTH_SPEED = 0.3;           // Speed of width changes (much slower)
+    float WAVE_END_WIDTH = 0.8;      // Final width at wave end (as fraction of PI)
     
     // === WAVE COVERAGE AND POSITION CONTROL ===
-    float WAVE_COVERAGE = 0.8;        // How much of front hemisphere to cover (0.8 = 80%)
+    float WAVE_COVERAGE = 0.5;        // How much of front hemisphere to cover (0.8 = 80%)
     float WAVE_MID_LATITUDE = 0.5;   // Base mid-latitude for wave (0.5=equator, 1.0=south pole)
-    float WAVE_LATITUDE_RANGE = 0.575;  // How much wave oscillates around mid-latitude
-    float WAVE_ANGULAR_START = 0.215;  // 8 o'clock front-visible position
-    float WAVE_ANGULAR_END = 0.75;    // 3.5 o'clock front-visible position
+    float WAVE_LATITUDE_RANGE = 0.25;  // How much wave oscillates around mid-latitude
+    float WAVE_ANGULAR_START = 0.4;  // 8 o'clock front-visible position
+    float WAVE_ANGULAR_END = 0.65;    // 3.5 o'clock front-visible position
     
     // === WAVE LATITUDE CONTROL ===
-    // Create smile shape: left → dips toward south pole → rises right (flipped)
-    float WAVE_LAT_START = 0.35;       // Starting latitude (left side now, closer to equator)
-    float WAVE_LAT_END = 0.45;         // Ending latitude (right side now, back toward equator)
-    float WAVE_LAT_MIDDLE = 0.65;      // Middle latitude (deepest point toward south pole)
+    float WAVE_LAT_START = 0.35;       // Starting latitude 
+    float WAVE_LAT_END = 0.7;         // Ending latitude
     
     // === INDIVIDUAL DIP/RISE CONTROL ===
     // Control each dip and rise amplitude (positive = down toward south, negative = up toward equator)
     float WAVE_DIP_1_AMPLITUDE = 0.15;   // First dip depth
-    float WAVE_RISE_1_AMPLITUDE = 0.13;  // First rise height  
-    float WAVE_DIP_2_AMPLITUDE = 0.175;    // Second dip depth
+    float WAVE_RISE_1_AMPLITUDE = 0.125;  // First rise height  
+    float WAVE_DIP_2_AMPLITUDE = 0.2;    // Second dip depth
     float WAVE_RISE_2_AMPLITUDE = 0.05; // Second rise height
-    float WAVE_DIP_3_AMPLITUDE = 0.05;    // Third dip depth
-    float WAVE_RISE_3_AMPLITUDE = 0.06;  // Third rise height (new)
+    float WAVE_DIP_3_AMPLITUDE = 0.1;    // Third dip depth
     
     // === WAVE SEGMENT WIDTH CONTROL ===
     // Control the width/duration of each segment (0.0 to 1.0 of total wave)
-    float WAVE_SEG_1_WIDTH = 0.175;   // First dip width
-    float WAVE_SEG_2_WIDTH = 0.4;   // First rise width
+    float WAVE_SEG_1_WIDTH = 0.1;   // First dip width
+    float WAVE_SEG_2_WIDTH = 0.2;   // First rise width
     float WAVE_SEG_3_WIDTH = 0.05;   // Second dip width
-    float WAVE_SEG_4_WIDTH = 0.5;   // Second rise width
-    float WAVE_SEG_5_WIDTH = 0.35;   // Third dip width
-    float WAVE_SEG_6_WIDTH = 0.8;   // Third rise width (new)
+    float WAVE_SEG_4_WIDTH = 0.4;   // Second rise width
+    float WAVE_SEG_5_WIDTH = 0.6;   // Third dip width
     
     // Calculate spherical coordinates using reference pattern
     vec3 pointDir = normalize(originalWorldPos);
-    
-    // === CAMERA-FACING WAVE ===
-    // Calculate angle relative to camera to make wave always visible from front
-    vec3 cameraViewDir = normalize(cameraPosition);  // Camera direction from origin
-    vec3 toPoint = normalize(originalWorldPos);
-    
-    // Calculate angle in camera space
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), cameraViewDir));
-    vec3 up = cross(cameraViewDir, right);
-    
-    // Get angle around sphere relative to camera view
-    float x = dot(toPoint, right);
-    float z = dot(toPoint, cameraViewDir);
-    float angle = atan(x, z);
-    float normalizedAngle = (angle + PI) / (2.0 * PI);  // Camera-relative angle
+    float angle = atan(pointDir.x, pointDir.z);  // Angular position around sphere
+    float normalizedAngle = (angle + PI) / (2.0 * PI);  // 0=back, 0.25=left, 0.5=front, 0.75=right, 1=back
     
     // Eclipse factor (distance from rim)
     float theta = acos(originalWorldPos.y / radius);  // Angle from north pole (0 to PI)
     
-    // === CAMERA-FACING VISIBILITY ===
-    // Wave is always visible from camera's perspective
-    // Calculate if this point is facing the camera
-    float facingCamera = dot(toPoint, cameraViewDir);
+    // Spatial visibility weights (from reference)
+    // Front is at normalizedAngle = 0.5
+    // Right is at normalizedAngle = 0.75
+    // Left is at normalizedAngle = 0.25
+    float frontWeight = pow(max(0.0, cos((normalizedAngle - 0.5) * 2.0 * PI)), 2.0);
+    float rightWeight = pow(max(0.0, cos((normalizedAngle - 0.75) * 2.0 * PI)), 1.5);
+    float leftWeight = pow(max(0.0, cos((normalizedAngle - 0.25) * 2.0 * PI)), 3.0);
     
-    // Show wave on front-facing side (facing camera)
-    float cameraFacingWeight = smoothstep(-0.2, 0.4, facingCamera);
-    
-    // Keep some spatial variation for organic look
-    float spatialVariation = sin(normalizedAngle * PI * 2.0) * 0.2 + 0.8;
+    // Combine weights for asymmetric visibility (stronger on front-right)
+    float spatialWeight = max(frontWeight, rightWeight * 0.8) + leftWeight * 0.3;
     
     // Wave band calculation based on angular position
     // Wave travels from 3 o'clock (right) to 8 o'clock (left-bottom)
@@ -614,28 +555,13 @@ void main() {
     float waveStartAngle = WAVE_ANGULAR_START;  // 8 o'clock front
     float waveEndAngle = WAVE_ANGULAR_END;      // 3.5 o'clock front
     
-    // === HORIZONTAL OSCILLATION (LEFT-RIGHT IN FRONT) ===
-    // Wave oscillates left-right within the visible front area with wave-like motion
-    // Create complex wave-like horizontal movement
-    float primaryWave = sin(uTime * WAVE_HORIZONTAL_SPEED) * 0.7;
-    float secondaryWave = sin(uTime * WAVE_HORIZONTAL_SPEED * 1.7 + PI * 0.3) * 0.3;
-    float wavePattern = sin(waveProgress * PI * WAVE_HORIZONTAL_WAVINESS); // Wave shape along the band
-    
-    // Combine waves for organic left-right movement
-    float horizontalOscillation = (primaryWave + secondaryWave + wavePattern * 0.2) * WAVE_HORIZONTAL_AMPLITUDE * WAVE_HORIZONTAL_ENABLED;
-    
-    // Adjust the angular boundaries to oscillate within front area
-    float animatedStartAngle = WAVE_ANGULAR_START + horizontalOscillation;
-    float animatedEndAngle = WAVE_ANGULAR_END + horizontalOscillation;
-    
-    // Check if we're in the wave's angular coverage area (with oscillation)
-    if (normalizedAngle >= animatedStartAngle && normalizedAngle <= animatedEndAngle) {
-        // Calculate progress along the wave path (normal: 0.0 at start, 1.0 at end)
-        // This will flip the wave so right side is mainly visible
-        waveProgress = (normalizedAngle - animatedStartAngle) / (animatedEndAngle - animatedStartAngle);
+    // Check if we're in the wave's angular coverage area (right to left)
+    if (normalizedAngle >= waveStartAngle && normalizedAngle <= waveEndAngle) {
+        // Calculate progress along the wave path (reversed: 1.0 at start, 0.0 at end)
+        waveProgress = 1.0 - (normalizedAngle - waveStartAngle) / (waveEndAngle - waveStartAngle);
         
-        // Only apply wave in lower hemisphere, within coverage area, AND facing camera
-        if (verticalPosition < 0.0 && cameraFacingWeight > 0.1) {  // Lower hemisphere and camera-facing
+        // Only apply wave in lower hemisphere and within coverage area
+        if (verticalPosition < 0.0) {  // Lower hemisphere only
             // Check if we're in the mid-latitude band
             float currentLatitude = theta / PI;  // 0.5 = equator, 1.0 = south pole
             float latitudeDiff = abs(currentLatitude - WAVE_MID_LATITUDE);
@@ -651,81 +577,33 @@ void main() {
         // Base gradient for entire lower hemisphere (when not in wave band)
         float depth = abs(verticalPosition); // 0 at equator, 1 at south pole
         
-        // === EQUATOR RIM VIOLET EFFECT ===
-        // Add bright violet near the equator rim, similar to upper hemisphere
-        vec3 baseGradient;
-        
         if (depth < 0.2) {
             // Near equator - darker purples
-            baseGradient = mix(centerBlack, deepPurple, depth / 0.2);
+            lowerColor = mix(centerBlack, deepPurple, depth / 0.2);
         } else if (depth < 0.5) {
             // Mid region - transition through purples
             float t = (depth - 0.2) / 0.3;
-            baseGradient = mix(deepPurple, winePurple, t);
+            lowerColor = mix(deepPurple, winePurple, t);
         } else if (depth < 0.8) {
             // Lower region - wine to pink transition
             float t = (depth - 0.5) / 0.3;
-            baseGradient = mix(winePurple, darkViolet * 0.5, t);
+            lowerColor = mix(winePurple, darkViolet * 0.5, t);
         } else {
             // Near south pole - darker for corona to stand out
             float t = (depth - 0.8) / 0.2;
-            baseGradient = mix(darkViolet * 0.5, deepIndigo2, t);
-        }
-        
-        // Apply equator violet on the rim for lower hemisphere
-        if (depth < 0.3 && eclipseFactor > 0.6) {
-            // Calculate how strong the rim color should be based on rim distance and depth
-            float rimIntensity = smoothstep(0.6, 0.95, eclipseFactor);
-            float depthFade = 1.0 - smoothstep(0.0, 0.3, depth);  // Stronger at equator
-            
-            // Create smooth gradient from center black → blue → violet on rim
-            vec3 rimColor;
-            
-            if (eclipseFactor < 0.75) {
-                // Smooth transition zone: black to blue (60% to 75%)
-                float t = smoothstep(0.6, 0.75, eclipseFactor);
-                rimColor = mix(centerBlack, blue, t);
-            } else if (eclipseFactor < 0.88) {
-                // Smooth transition zone: blue to violet (75% to 88%)
-                float t = smoothstep(0.75, 0.88, eclipseFactor);
-                rimColor = mix(blue, equatorViolet, t);
-            } else {
-                // Full violet at the rim edge (88% to 95%)
-                // Add subtle glow intensification at the very edge
-                float edgeGlow = smoothstep(0.88, 0.95, eclipseFactor);
-                rimColor = mix(equatorViolet, equatorViolet * 1.2, edgeGlow * 0.5);
-            }
-            
-            // Apply the rim color with depth-based fading
-            float blendFactor = rimIntensity * depthFade * 0.8;  // Max 80% blend
-            lowerColor = mix(baseGradient, rimColor, blendFactor);
-        } else {
-            lowerColor = baseGradient;
+            lowerColor = mix(darkViolet * 0.5, deepIndigo2, t);
         }
     } else {
         lowerColor = centerBlack;
     }
     
-    // Apply wave band only in inner region (below rim gradient)
-    // Wave should not appear where rim gradient is active (eclipseFactor > 0.6)
-    if (inWaveBand && eclipseFactor < 0.6) {
+    // Apply wave band with high visibility for debugging
+    if (inWaveBand) {
         // Calculate wave shape following the spherical curvature
         // Wave undulates along the surface as it travels radially
         
-        // === ORGANIC WAVE MOVEMENT (LIQUID-LIKE) ===
-        // Add liquid-like flow patterns for smooth, fluid movement
-        float liquidFlow1 = sin(uTime * WAVE_FLOW_SPEED_1 + normalizedAngle * PI * 2.5) * 0.08 * WAVE_ORGANIC_INTENSITY;
-        float liquidFlow2 = cos(uTime * WAVE_FLOW_SPEED_2 * 0.7 - waveProgress * PI * 1.5) * 0.06 * WAVE_ORGANIC_INTENSITY;
-        float liquidPulse = sin(uTime * WAVE_PULSE_SPEED * 0.8 + theta * 1.5) * 0.04 * WAVE_ORGANIC_INTENSITY;
-        
-        // Combine for organic flow (renamed from organicFlow to avoid conflicts)
-        float organicFlow1 = liquidFlow1;
-        float organicFlow2 = liquidFlow2;
-        float organicPulse = liquidPulse;
-        
-        // Calculate width interpolation based on progress with organic variation
-        float widthVariation = 1.0 + sin(uTime * WAVE_WIDTH_SPEED + waveProgress * PI * 4.0) * WAVE_WIDTH_VARIATION;
-        float currentWidth = mix(WAVE_START_WIDTH, WAVE_END_WIDTH, waveProgress) * widthVariation;
+        // Calculate width interpolation based on progress
+        float currentWidth = mix(WAVE_START_WIDTH, WAVE_END_WIDTH, waveProgress);
         
         // Declare wave variables
         float waveCenterTheta;
@@ -736,45 +614,8 @@ void main() {
         
         // Controlled wave with individual dip/rise segments
         
-        // === ANIMATED WAVE MOVEMENT ===
-        // Add time-based movement using control parameters
-        
-        // VERTICAL (UP/DOWN) MOVEMENT
-        float verticalOscillation = sin(uTime * WAVE_VERTICAL_SPEED + normalizedAngle * PI * WAVE_VERTICAL_COMPLEXITY) * WAVE_VERTICAL_AMPLITUDE;
-        
-        // LATERAL MOVEMENT
-        float lateralOffset = sin(uTime * WAVE_LATERAL_SPEED + waveProgress * PI) * WAVE_LATERAL_AMPLITUDE;
-        
-        // Add the organic flow components
-        float organicOffset = organicFlow1 + organicFlow2 + organicPulse;
-        
-        // Combine all vertical movements with master control
-        float totalVerticalMovement = (verticalOscillation + organicOffset * 0.5) * WAVE_VERTICAL_ENABLED;
-        
-        // === SMILE-SHAPED WAVE PATH WITH LIQUID FLOW ===
-        // Create a smooth smile curve that flows like liquid
-        // waveProgress: 1.0 at right (start), 0.0 at left (end)
-        
-        // Enhanced smile curve with smoother transition
-        float smileCurve = pow(4.0 * waveProgress * (1.0 - waveProgress), 1.2); // Smoother parabola
-        
-        // Add asymmetry for more natural smile (slightly deeper on one side)
-        float asymmetry = sin(waveProgress * PI) * 0.1;
-        smileCurve = smileCurve * (1.0 + asymmetry);
-        
-        // Interpolate latitude: starts near equator, dips to south pole, rises back
-        float baseLat = mix(WAVE_LAT_START, WAVE_LAT_MIDDLE, smileCurve);
-        
-        // Multi-layered liquid flow for realistic fluid dynamics
-        float liquidFlow = sin(uTime * 0.12 + waveProgress * PI * 2.0) * 0.04;
-        float liquidWave = cos(uTime * 0.18 - waveProgress * PI * 3.0) * 0.025;
-        float liquidRipple = sin(uTime * 0.25 + waveProgress * PI * 4.0) * 0.015;
-        
-        // Apply all movements with liquid-like flow
-        baseLat = baseLat + 
-                  lateralOffset * 0.3 +  // Reduced lateral for stable smile shape
-                  totalVerticalMovement + 
-                  liquidFlow + liquidWave + liquidRipple;
+        // Base latitude that moves from start to end
+        float baseLat = mix(WAVE_LAT_START, WAVE_LAT_END, waveProgress);
         
         // Calculate cumulative segment positions
         float seg1End = WAVE_SEG_1_WIDTH;
@@ -782,77 +623,47 @@ void main() {
         float seg3End = seg2End + WAVE_SEG_3_WIDTH;
         float seg4End = seg3End + WAVE_SEG_4_WIDTH;
         float seg5End = seg4End + WAVE_SEG_5_WIDTH;
-        float seg6End = seg5End + WAVE_SEG_6_WIDTH;  // Add 6th segment
         
         // Normalize progress based on actual segment widths
-        float normalizedProgress = waveProgress * seg6End;  // Use seg6End instead of seg5End
+        float normalizedProgress = waveProgress * seg5End;
         
         float waveOffset = 0.0;
         float segmentWidth = WAVE_START_WIDTH;  // Renamed to avoid redefinition
         
-        // Add breathing effect to segment amplitudes with organic variation
-        float breathingAmplitude = sin(uTime * WAVE_BREATHING_SPEED + normalizedProgress * PI * 0.5) * WAVE_BREATHING_INTENSITY + 1.0;
-        
-        // Add secondary organic breathing patterns with controls
-        float organicBreathing = sin(uTime * WAVE_FLOW_SPEED_2 + waveProgress * PI * 3.0) * 0.15 * WAVE_ORGANIC_INTENSITY;
-        float waveUndulation = cos(uTime * WAVE_PULSE_SPEED - normalizedAngle * PI * 4.0) * 0.1 * WAVE_ORGANIC_INTENSITY;
-        breathingAmplitude += organicBreathing + waveUndulation;
-        
         if (normalizedProgress < seg1End) {
-            // First DIP with animation
+            // First DIP
             float t = normalizedProgress / seg1End;
             float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth dip curve
-            float animatedAmplitude = WAVE_DIP_1_AMPLITUDE * breathingAmplitude;
-            waveOffset = animatedAmplitude * smoothT;
-            float widthPulse = 1.0 + sin(uTime * 0.4 + t * PI) * 0.05; // Reduced speed and amplitude for 60fps
-            segmentWidth = mix(WAVE_START_WIDTH, WAVE_START_WIDTH * 1.2, smoothT) * widthPulse;
+            waveOffset = WAVE_DIP_1_AMPLITUDE * smoothT;
+            segmentWidth = mix(WAVE_START_WIDTH, WAVE_START_WIDTH * 1.2, smoothT);
             
         } else if (normalizedProgress < seg2End) {
-            // First RISE with flow
+            // First RISE
             float t = (normalizedProgress - seg1End) / WAVE_SEG_2_WIDTH;
             float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth rise curve
-            float animatedDip = WAVE_DIP_1_AMPLITUDE * (0.9 + sin(uTime * 0.3) * 0.1); // 60fps optimized
-            float animatedRise = WAVE_RISE_1_AMPLITUDE * breathingAmplitude;
-            waveOffset = mix(animatedDip, animatedRise, smoothT);
+            waveOffset = mix(WAVE_DIP_1_AMPLITUDE, WAVE_RISE_1_AMPLITUDE, smoothT);
             segmentWidth = mix(WAVE_START_WIDTH * 1.2, WAVE_START_WIDTH, smoothT);
             
         } else if (normalizedProgress < seg3End) {
-            // Second DIP with stronger animation
+            // Second DIP
             float t = (normalizedProgress - seg2End) / WAVE_SEG_3_WIDTH;
             float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth dip curve
-            float animatedRise = WAVE_RISE_1_AMPLITUDE * (0.9 + sin(uTime * 0.25) * 0.1); // 60fps optimized
-            float animatedDip2 = WAVE_DIP_2_AMPLITUDE * (breathingAmplitude * 1.2);
-            waveOffset = mix(animatedRise, animatedDip2, smoothT);
-            float widthOscillation = 1.0 + cos(uTime * 0.3 + t * PI) * 0.08; // Reduced for smoothness
-            segmentWidth = mix(WAVE_START_WIDTH, WAVE_START_WIDTH * 1.3, smoothT) * widthOscillation;
+            waveOffset = mix(WAVE_RISE_1_AMPLITUDE, WAVE_DIP_2_AMPLITUDE, smoothT);
+            segmentWidth = mix(WAVE_START_WIDTH, WAVE_START_WIDTH * 1.3, smoothT);
             
         } else if (normalizedProgress < seg4End) {
-            // Second RISE with wave motion
+            // Second RISE
             float t = (normalizedProgress - seg3End) / WAVE_SEG_4_WIDTH;
             float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth rise curve
-            float flowingDip = WAVE_DIP_2_AMPLITUDE * (1.0 + sin(uTime * 0.35 - t * PI) * 0.15); // 60fps smooth
-            float flowingRise = WAVE_RISE_2_AMPLITUDE * breathingAmplitude;
-            waveOffset = mix(flowingDip, flowingRise, smoothT);
+            waveOffset = mix(WAVE_DIP_2_AMPLITUDE, WAVE_RISE_2_AMPLITUDE, smoothT);
             segmentWidth = mix(WAVE_START_WIDTH * 1.3, WAVE_START_WIDTH * 1.1, smoothT);
             
-        } else if (normalizedProgress < seg5End) {
-            // Third DIP with subtle movement
-            float t = (normalizedProgress - seg4End) / WAVE_SEG_5_WIDTH;
-            float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth dip curve
-            float animatedRise2 = WAVE_RISE_2_AMPLITUDE * (0.95 + sin(uTime * 0.3) * 0.05); // Subtle 60fps
-            float animatedDip3 = WAVE_DIP_3_AMPLITUDE * breathingAmplitude;
-            waveOffset = mix(animatedRise2, animatedDip3, smoothT);
-            segmentWidth = mix(WAVE_START_WIDTH * 1.1, WAVE_START_WIDTH * 1.15, smoothT);
-            
         } else {
-            // Third RISE (final) with fade animation
-            float t = min((normalizedProgress - seg5End) / WAVE_SEG_6_WIDTH, 1.0);
-            float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth rise curve
-            float fadingDip = WAVE_DIP_3_AMPLITUDE * (1.0 + sin(uTime * 0.25) * 0.08); // Smooth fade
-            float fadingRise = WAVE_RISE_3_AMPLITUDE * (breathingAmplitude * (1.0 - t * 0.3));
-            waveOffset = mix(fadingDip, fadingRise, smoothT);
-            float endWidthAnimation = 1.0 + sin(uTime * 0.2 - t * PI) * 0.05; // Gentle end animation
-            segmentWidth = mix(WAVE_START_WIDTH * 1.15, WAVE_END_WIDTH, smoothstep(0.0, 1.0, t)) * endWidthAnimation;
+            // Third DIP (final)
+            float t = min((normalizedProgress - seg4End) / WAVE_SEG_5_WIDTH, 1.0);
+            float smoothT = 0.5 * (1.0 - cos(t * PI));  // Smooth dip curve
+            waveOffset = mix(WAVE_RISE_2_AMPLITUDE, WAVE_DIP_3_AMPLITUDE, smoothT);
+            segmentWidth = mix(WAVE_START_WIDTH * 1.1, WAVE_END_WIDTH, smoothstep(0.0, 1.0, t));
         }
         
         // Apply the calculated offset to base latitude
@@ -877,198 +688,69 @@ void main() {
             // Sample the base gradient color at this position for blending
             vec3 baseGradientColor = lowerColor;  // Current background color at this position
             
-            // === VERTICAL RADIAL GRADIENT WITHIN WAVE BAND ===
-            // radialFactor: 0.0 = top of wave band, 1.0 = bottom of wave band
-            vec3 verticalGradient;
+            // Color selection based on wave progress and position
+            // Wave colors blend with surrounding gradient
+            vec3 waveColor = deepPurple;
             
-            // === DYNAMIC COLOR MOVEMENT ===
-            // Add time-based animation to make colors flow and shift
-            float colorFlowSpeed = 0.8; // Speed of color movement
-            float colorPulseSpeed = 2.0; // Speed of pulsing effects
-            
-            // Create flowing offset that moves colors through the wave
-            float flowOffset = sin(uTime * colorFlowSpeed + waveProgress * 3.0) * 0.15;
-            float pulseOffset = sin(uTime * colorPulseSpeed + radialFactor * PI) * 0.05;
-            
-            // Adjust radialFactor with animation
-            float animatedRadial = radialFactor + flowOffset + pulseOffset;
-            animatedRadial = clamp(animatedRadial, 0.0, 1.0);
-            
-            // Color shifting animation - colors morph between adjacent colors
-            float colorShift = sin(uTime * 1.2 + waveProgress * 2.0) * 0.5 + 0.5;
-            float breathingEffect = sin(uTime * 1.5 + normalizedAngle * PI * 2.0) * 0.3 + 0.7;
-            
-            // Create vertical gradient from top to bottom with animation
-            if (animatedRadial < 0.08) {
-                // Very top: deepEquatorPurple to brightMagenta for clean equator transition
-                float t = animatedRadial / 0.08;
-                // Animate between colors
-                vec3 animatedPurple = mix(deepEquatorPurple, deepEquatorPurple * 1.3, colorShift);
-                vec3 animatedMagenta = mix(brightMagenta, brightMagenta * breathingEffect, colorShift);
-                verticalGradient = mix(animatedPurple, animatedMagenta, t);
-            } else if (animatedRadial < 0.2) {
-                // brightMagenta to softPink with pulsing
-                float t = (animatedRadial - 0.08) / 0.12;
-                vec3 animatedMagenta = brightMagenta * (0.9 + sin(uTime * 2.5) * 0.2);
-                vec3 animatedPink = mix(softPink, pinkMagenta, colorShift * 0.4);
-                verticalGradient = mix(animatedMagenta, animatedPink, t);
-            } else if (animatedRadial < 0.33) {
-                // softPink to vibrantPink with color morphing
-                float t = (animatedRadial - 0.2) / 0.13;
-                vec3 morphedPink = mix(softPink, vibrantPink, breathingEffect);
-                vec3 morphedVibrant = mix(vibrantPink, waveRed * 0.8, colorShift * 0.3);
-                verticalGradient = mix(morphedPink, morphedVibrant, t);
-            } else if (animatedRadial < 0.48) {
-                // vibrantPink to waveRed with pulsing intensity
-                float t = (animatedRadial - 0.33) / 0.15;
-                float redPulse = 1.0 + sin(uTime * 3.0 + waveProgress * PI) * 0.2;
-                vec3 animatedVibrant = vibrantPink * breathingEffect;
-                vec3 animatedRed = waveRed * redPulse;
-                verticalGradient = mix(animatedVibrant, animatedRed, t);
-            } else if (animatedRadial < 0.68) {
-                // waveRed to deepWine with flowing transition
-                float t = (animatedRadial - 0.48) / 0.2;
-                float flowEffect = sin(uTime * 1.8 + radialFactor * PI * 2.0) * 0.15 + 1.0;
-                vec3 flowingRed = mix(waveRed, brightRed, colorShift * 0.3) * flowEffect;
-                vec3 flowingWine = deepWine * (0.8 + breathingEffect * 0.3);
-                verticalGradient = mix(flowingRed, flowingWine, t);
+            if (waveProgress < 0.25) {
+                // 3 to 5 o'clock: Blend with mid-latitude colors
+                float t = waveProgress / 0.25;
+                vec3 baseColor = mix(deepPurple, winePurple, t);
+                // Blend with surrounding gradient for natural transition
+                waveColor = mix(baseGradientColor * 1.2, baseColor, 0.7);
+            } else if (waveProgress < 0.4) {
+                // Rise to center-left: Transition through wine to pink
+                float t = (waveProgress - 0.25) / 0.15;
+                vec3 baseColor = mix(winePurple, brightPink, t);
+                // Stronger color but still influenced by surroundings
+                waveColor = mix(baseGradientColor * 1.1, baseColor, 0.75);
+            } else if (waveProgress < 0.6) {
+                // Dip toward south: Gradual transition to warmer colors
+                float t = (waveProgress - 0.4) / 0.2;
+                vec3 redOrange = vec3(1.0, 0.325, 0.184);  // #FF532F - Red-orange
+                
+                // Blend based on latitude - more red-orange as we go south
+                if (waveCenterTheta > PI * 0.75) {  // Approaching south region
+                    float southBlend = smoothstep(PI * 0.75, PI * 0.85, waveCenterTheta);
+                    vec3 baseColor = mix(pinkMagenta, redOrange, southBlend);
+                    // Merge with background gradient
+                    waveColor = mix(baseGradientColor, baseColor * 1.1, 0.8);
+                } else {
+                    waveColor = mix(baseGradientColor * 1.1, mix(brightPink, pinkMagenta, t), 0.75);
+                }
+            } else if (waveProgress < 0.75) {
+                // Rise from south: Transition back through pink tones
+                float t = (waveProgress - 0.6) / 0.15;
+                vec3 redOrange = vec3(1.0, 0.325, 0.184);
+                // Blend red-orange with magenta based on position
+                vec3 baseColor = mix(mix(redOrange, pinkMagenta, 0.6), darkViolet, t);
+                waveColor = mix(baseGradientColor * 1.1, baseColor, 0.75);
             } else {
-                // Rest of band: deepWine expands and smoothly fades with animation
-                float t = (animatedRadial - 0.68) / 0.32;
-                float fadeAnimation = sin(uTime * 1.0 + waveProgress * PI) * 0.2 + 0.8;
-                vec3 animatedWine = deepWine * fadeAnimation;
-                verticalGradient = mix(animatedWine, baseGradientColor * breathingEffect, t);
+                // 8 o'clock: Fade into dark violet before south pole glow
+                float t = (waveProgress - 0.75) / 0.25;
+                vec3 baseColor = mix(darkViolet, deepDark, t);
+                // Gradually merge with background as wave ends
+                float mergeFactor = 0.75 - t * 0.3;  // Fade from 0.75 to 0.45
+                waveColor = mix(baseGradientColor, baseColor, mergeFactor);
             }
             
-            // === HORIZONTAL TRANSITIONS AND SEGMENT-SPECIFIC COLORS ===
-            vec3 waveColor = verticalGradient;
+            // Apply radial gradient within the wave band
+            // Edges blend more with background, center is more prominent
+            float edgeBlend = 1.0 - pow(abs(radialFactor - 0.5) * 2.0, 1.5);
+            waveColor = mix(baseGradientColor, waveColor, 0.5 + edgeBlend * 0.5);
             
-            // Determine if we're in a dip or rise segment
-            bool isDip = (normalizedProgress < seg1End) ||  // First DIP
-                        (normalizedProgress >= seg2End && normalizedProgress < seg3End) ||  // Second DIP
-                        (normalizedProgress >= seg4End && normalizedProgress < seg5End);    // Third DIP
+            // Maximum visibility for debugging
+            float waveIntensity = 2.0;  // Very high intensity
             
-            // === ANIMATED COLOR ZONES WITH MOVEMENT ===
-            // Add time-based morphing to segment colors
-            float segmentAnimation = sin(uTime * 1.5 + normalizedProgress * PI) * 0.3 + 0.7;
-            float waveColorFlow = sin(uTime * 2.0 - waveProgress * PI * 2.0) * 0.5 + 0.5;
+            // Force high visibility
+            float debugVisibility = 0.95;  // Nearly complete override
             
-            // RIGHT SIDE (beginning of wave, 3.5 o'clock)
-            if (waveProgress < 0.3) {
-                if (isDip) {
-                    // Animate lighter purple for dips on right side
-                    vec3 animatedLighterPurple = mix(lighterPurple, violetPurple, waveColorFlow * 0.4);
-                    waveColor = mix(verticalGradient, animatedLighterPurple * segmentAnimation, 0.6);
-                    // Transition to base color below with animation
-                    if (radialFactor > 0.6) {
-                        float fadeT = (radialFactor - 0.6) / 0.4;
-                        float fadeAnimation = sin(uTime * 1.8) * 0.2 + 0.8;
-                        waveColor = mix(waveColor, baseGradientColor * fadeAnimation, fadeT * 0.5);
-                    }
-                }
-            }
-            // LEFT SIDE AND NEAR SOUTH (middle to end)
-            else if (waveProgress > 0.5 && waveProgress < 0.85) {
-                if (isDip && waveCenterTheta > PI * 0.7) {  // Near south pole
-                    // Animated waveRed color for dips very close to south pole
-                    float redIntensity = 1.0 + sin(uTime * 3.5 + waveProgress * PI) * 0.25;
-                    vec3 animatedWaveRed = waveRed * redIntensity;
-                    
-                    if (waveCenterTheta > PI * 0.8) {  // Very close to south pole
-                        // Override with animated waveRed in the middle band
-                        if (radialFactor > 0.25 && radialFactor < 0.6) {
-                            waveColor = mix(animatedWaveRed, brightRed, waveColorFlow * 0.2);
-                        } else if (radialFactor >= 0.6) {
-                            // Transition to deepWine below with flow
-                            float t = (radialFactor - 0.6) / 0.4;
-                            vec3 flowingWine = mix(deepWine, winePurple, sin(uTime * 2.2) * 0.3);
-                            waveColor = mix(animatedWaveRed, flowingWine, t);
-                        }
-                    } else {
-                        // Regular near-south behavior with animation
-                        if (radialFactor > 0.3 && radialFactor < 0.7) {
-                            waveColor = mix(verticalGradient, animatedWaveRed, 0.7 * segmentAnimation);
-                            // Transition to deepWine
-                            if (radialFactor > 0.5) {
-                                float t = (radialFactor - 0.5) / 0.2;
-                                vec3 morphingWine = deepWine * (0.8 + waveColorFlow * 0.4);
-                                waveColor = mix(animatedWaveRed, morphingWine, t);
-                            }
-                        }
-                    }
-                }
-            }
-            // FINAL 15% - HORIZONTAL FADE (85-100%)
-            else if (waveProgress >= 0.85) {
-                // Animated horizontal transition
-                float t = (waveProgress - 0.85) / 0.15;
-                float fadeFlow = sin(uTime * 1.2 + t * PI) * 0.3 + 0.7;
-                vec3 animatedDeepPurple = deepPurple * fadeFlow;
-                vec3 animatedWinePurple = mix(winePurple, darkViolet, waveColorFlow * 0.5);
-                vec3 horizontalColor = mix(animatedDeepPurple, animatedWinePurple, t);
-                // 70% base color, 30% background gradient with animation
-                waveColor = mix(horizontalColor, baseGradientColor * segmentAnimation, 0.3);
-                // Fade out intensity with flow
-                float fadeIntensity = (1.0 - t * 0.5) * fadeFlow;
-                waveColor = mix(baseGradientColor, waveColor, fadeIntensity);
-            }
+            // Apply wave with maximum visibility for testing
+            lowerColor = mix(lowerColor, waveColor * waveIntensity, debugVisibility);
             
-            // === SMOOTH BLENDING FOR SPHERE BENDING ILLUSION ===
-            // Create smooth transitions at wave edges for seamless integration
-            
-            // Calculate smooth edge falloff based on vertical position in wave
-            float verticalBlend = 1.0;
-            if (radialFactor < 0.15) {
-                // Top edge: smooth fade in
-                verticalBlend = smoothstep(0.0, 0.15, radialFactor);
-            } else if (radialFactor > 0.85) {
-                // Bottom edge: smooth fade out
-                verticalBlend = smoothstep(1.0, 0.85, radialFactor);
-            }
-            
-            // Calculate horizontal blend for smooth transitions at wave ends
-            float horizontalBlend = 1.0;
-            if (waveProgress < 0.1) {
-                // Right start: smooth fade in
-                horizontalBlend = smoothstep(0.0, 0.1, waveProgress);
-            } else if (waveProgress > 0.8) {
-                // Left end: very smooth fade out
-                float fadeStart = 0.8;
-                float fadeEnd = 1.0;
-                horizontalBlend = smoothstep(fadeEnd, fadeStart, waveProgress);
-            }
-            
-            // Apply spherical bending effect - smoother in the middle, softer at edges
-            float centerDistance = abs(radialFactor - 0.5) * 2.0;
-            float bendingFactor = 1.0 - pow(centerDistance, 2.0); // Quadratic falloff
-            
-            // Combine all blending factors for ultra-smooth transition
-            float totalBlend = verticalBlend * horizontalBlend * (0.4 + bendingFactor * 0.6);
-            
-            // Mix wave color with base more smoothly
-            vec3 blendedColor = mix(baseGradientColor, waveColor, totalBlend);
-            
-            // Add subtle color interpolation for bending illusion
-            vec3 sphereBendColor = mix(baseGradientColor * 1.1, blendedColor, totalBlend * 0.8);
-            
-            // Apply final color with smooth intensity
-            float waveIntensity = 1.3 + bendingFactor * 0.4; // Gentler intensity variation
-            
-            // === FADE WAVE NEAR RIM GRADIENT BOUNDARY ===
-            // Smoothly fade the wave as it approaches eclipseFactor = 0.6
-            float rimFade = 1.0;
-            if (eclipseFactor > 0.45) {
-                // Start fading at 0.45, completely gone by 0.6
-                rimFade = smoothstep(0.6, 0.45, eclipseFactor);
-            }
-            
-            // Apply wave with rim fade
-            lowerColor = mix(lowerColor, sphereBendColor * waveIntensity, totalBlend * 0.85 * rimFade);
-            
-            // Very subtle center enhancement for depth
-            if (abs(radialFactor - 0.5) < 0.2) {
-                float centerEnhance = 1.0 - abs(radialFactor - 0.5) * 5.0;
-                lowerColor = mix(lowerColor, lowerColor * 1.15, centerEnhance * 0.3);
+            // Add bright center line for visibility
+            if (abs(radialFactor - 0.5) < 0.1) {
+                lowerColor += waveColor * 0.5;  // Bright center stripe
             }
         }
     }

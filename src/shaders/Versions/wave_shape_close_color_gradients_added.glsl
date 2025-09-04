@@ -505,7 +505,7 @@ void main() {
     // === CONFIGURABLE WAVE PARAMETERS ===
     // Adjust these to control wave position and shape
     float WAVE_START_WIDTH = 0.1;   // Initial width of wave (as fraction of PI)
-    float WAVE_END_WIDTH = 0.3;      // Final width at wave end (as fraction of PI)
+    float WAVE_END_WIDTH = 0.2;      // Final width at wave end (as fraction of PI)
     
     // === WAVE MOVEMENT CONTROLS ===
     // UP/DOWN MOVEMENT CONTROLS
@@ -515,14 +515,14 @@ void main() {
     float WAVE_VERTICAL_COMPLEXITY = 1.0;   // Complexity of vertical movement (1.0 = simple, 4.0 = complex)
     
     // HORIZONTAL OSCILLATION CONTROLS (wave stays in front, oscillates left-right)
-    float WAVE_HORIZONTAL_ENABLED = 1.0;    // Enable horizontal oscillation (0.0 = off, 1.0 = on)
+    float WAVE_HORIZONTAL_ENABLED = 0.0;    // Enable horizontal oscillation (0.0 = off, 1.0 = on)
     float WAVE_HORIZONTAL_SPEED = 0.2;      // Speed of left-right oscillation (smooth 60fps)
     float WAVE_HORIZONTAL_AMPLITUDE = 0.08; // How far wave moves left-right (as fraction of front area)
     float WAVE_HORIZONTAL_WAVINESS = 2.0;   // Number of waves in the oscillation pattern
     
     // LATERAL/HORIZONTAL MOVEMENT CONTROLS  
-    float WAVE_LATERAL_SPEED = 0.35;         // Speed of side-to-side flow (optimized for 60fps)
-    float WAVE_LATERAL_AMPLITUDE = 0.06;    // How far wave shifts laterally (reduced for smoothness)
+    float WAVE_LATERAL_SPEED = 0.3;         // Speed of side-to-side flow (optimized for 60fps)
+    float WAVE_LATERAL_AMPLITUDE = 0.05;    // How far wave shifts laterally (reduced for smoothness)
     
     // ORGANIC FLOW CONTROLS (optimized for 60fps)
     float WAVE_ORGANIC_INTENSITY = 0.9;     // Overall organic movement intensity (reduced for smoothness)
@@ -546,10 +546,8 @@ void main() {
     float WAVE_ANGULAR_END = 0.75;    // 3.5 o'clock front-visible position
     
     // === WAVE LATITUDE CONTROL ===
-    // Create smile shape: left → dips toward south pole → rises right (flipped)
-    float WAVE_LAT_START = 0.35;       // Starting latitude (left side now, closer to equator)
-    float WAVE_LAT_END = 0.45;         // Ending latitude (right side now, back toward equator)
-    float WAVE_LAT_MIDDLE = 0.65;      // Middle latitude (deepest point toward south pole)
+    float WAVE_LAT_START = 0.35;       // Starting latitude 
+    float WAVE_LAT_END = 0.6;         // Ending latitude
     
     // === INDIVIDUAL DIP/RISE CONTROL ===
     // Control each dip and rise amplitude (positive = down toward south, negative = up toward equator)
@@ -571,35 +569,22 @@ void main() {
     
     // Calculate spherical coordinates using reference pattern
     vec3 pointDir = normalize(originalWorldPos);
-    
-    // === CAMERA-FACING WAVE ===
-    // Calculate angle relative to camera to make wave always visible from front
-    vec3 cameraViewDir = normalize(cameraPosition);  // Camera direction from origin
-    vec3 toPoint = normalize(originalWorldPos);
-    
-    // Calculate angle in camera space
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), cameraViewDir));
-    vec3 up = cross(cameraViewDir, right);
-    
-    // Get angle around sphere relative to camera view
-    float x = dot(toPoint, right);
-    float z = dot(toPoint, cameraViewDir);
-    float angle = atan(x, z);
-    float normalizedAngle = (angle + PI) / (2.0 * PI);  // Camera-relative angle
+    float angle = atan(pointDir.x, pointDir.z);  // Angular position around sphere
+    float normalizedAngle = (angle + PI) / (2.0 * PI);  // 0=back, 0.25=left, 0.5=front, 0.75=right, 1=back
     
     // Eclipse factor (distance from rim)
     float theta = acos(originalWorldPos.y / radius);  // Angle from north pole (0 to PI)
     
-    // === CAMERA-FACING VISIBILITY ===
-    // Wave is always visible from camera's perspective
-    // Calculate if this point is facing the camera
-    float facingCamera = dot(toPoint, cameraViewDir);
+    // Spatial visibility weights (from reference)
+    // Front is at normalizedAngle = 0.5
+    // Right is at normalizedAngle = 0.75
+    // Left is at normalizedAngle = 0.25
+    float frontWeight = pow(max(0.0, cos((normalizedAngle - 0.5) * 2.0 * PI)), 2.0);
+    float rightWeight = pow(max(0.0, cos((normalizedAngle - 0.75) * 2.0 * PI)), 1.5);
+    float leftWeight = pow(max(0.0, cos((normalizedAngle - 0.25) * 2.0 * PI)), 3.0);
     
-    // Show wave on front-facing side (facing camera)
-    float cameraFacingWeight = smoothstep(-0.2, 0.4, facingCamera);
-    
-    // Keep some spatial variation for organic look
-    float spatialVariation = sin(normalizedAngle * PI * 2.0) * 0.2 + 0.8;
+    // Combine weights for asymmetric visibility (stronger on front-right)
+    float spatialWeight = max(frontWeight, rightWeight * 0.8) + leftWeight * 0.3;
     
     // Wave band calculation based on angular position
     // Wave travels from 3 o'clock (right) to 8 o'clock (left-bottom)
@@ -630,12 +615,11 @@ void main() {
     
     // Check if we're in the wave's angular coverage area (with oscillation)
     if (normalizedAngle >= animatedStartAngle && normalizedAngle <= animatedEndAngle) {
-        // Calculate progress along the wave path (normal: 0.0 at start, 1.0 at end)
-        // This will flip the wave so right side is mainly visible
-        waveProgress = (normalizedAngle - animatedStartAngle) / (animatedEndAngle - animatedStartAngle);
+        // Calculate progress along the wave path (reversed: 1.0 at start, 0.0 at end)
+        waveProgress = 1.0 - (normalizedAngle - animatedStartAngle) / (animatedEndAngle - animatedStartAngle);
         
-        // Only apply wave in lower hemisphere, within coverage area, AND facing camera
-        if (verticalPosition < 0.0 && cameraFacingWeight > 0.1) {  // Lower hemisphere and camera-facing
+        // Only apply wave in lower hemisphere and within coverage area
+        if (verticalPosition < 0.0) {  // Lower hemisphere only
             // Check if we're in the mid-latitude band
             float currentLatitude = theta / PI;  // 0.5 = equator, 1.0 = south pole
             float latitudeDiff = abs(currentLatitude - WAVE_MID_LATITUDE);
@@ -712,16 +696,11 @@ void main() {
         // Calculate wave shape following the spherical curvature
         // Wave undulates along the surface as it travels radially
         
-        // === ORGANIC WAVE MOVEMENT (LIQUID-LIKE) ===
-        // Add liquid-like flow patterns for smooth, fluid movement
-        float liquidFlow1 = sin(uTime * WAVE_FLOW_SPEED_1 + normalizedAngle * PI * 2.5) * 0.08 * WAVE_ORGANIC_INTENSITY;
-        float liquidFlow2 = cos(uTime * WAVE_FLOW_SPEED_2 * 0.7 - waveProgress * PI * 1.5) * 0.06 * WAVE_ORGANIC_INTENSITY;
-        float liquidPulse = sin(uTime * WAVE_PULSE_SPEED * 0.8 + theta * 1.5) * 0.04 * WAVE_ORGANIC_INTENSITY;
-        
-        // Combine for organic flow (renamed from organicFlow to avoid conflicts)
-        float organicFlow1 = liquidFlow1;
-        float organicFlow2 = liquidFlow2;
-        float organicPulse = liquidPulse;
+        // === ORGANIC WAVE MOVEMENT ===
+        // Add more complex, organic movement patterns using controls
+        float organicFlow1 = sin(uTime * WAVE_FLOW_SPEED_1 + normalizedAngle * PI * 3.0) * 0.1 * WAVE_ORGANIC_INTENSITY;
+        float organicFlow2 = cos(uTime * WAVE_FLOW_SPEED_2 - waveProgress * PI * 2.0) * 0.08 * WAVE_ORGANIC_INTENSITY;
+        float organicPulse = sin(uTime * WAVE_PULSE_SPEED + theta * 2.0) * 0.05 * WAVE_ORGANIC_INTENSITY;
         
         // Calculate width interpolation based on progress with organic variation
         float widthVariation = 1.0 + sin(uTime * WAVE_WIDTH_SPEED + waveProgress * PI * 4.0) * WAVE_WIDTH_VARIATION;
@@ -751,30 +730,10 @@ void main() {
         // Combine all vertical movements with master control
         float totalVerticalMovement = (verticalOscillation + organicOffset * 0.5) * WAVE_VERTICAL_ENABLED;
         
-        // === SMILE-SHAPED WAVE PATH WITH LIQUID FLOW ===
-        // Create a smooth smile curve that flows like liquid
-        // waveProgress: 1.0 at right (start), 0.0 at left (end)
-        
-        // Enhanced smile curve with smoother transition
-        float smileCurve = pow(4.0 * waveProgress * (1.0 - waveProgress), 1.2); // Smoother parabola
-        
-        // Add asymmetry for more natural smile (slightly deeper on one side)
-        float asymmetry = sin(waveProgress * PI) * 0.1;
-        smileCurve = smileCurve * (1.0 + asymmetry);
-        
-        // Interpolate latitude: starts near equator, dips to south pole, rises back
-        float baseLat = mix(WAVE_LAT_START, WAVE_LAT_MIDDLE, smileCurve);
-        
-        // Multi-layered liquid flow for realistic fluid dynamics
-        float liquidFlow = sin(uTime * 0.12 + waveProgress * PI * 2.0) * 0.04;
-        float liquidWave = cos(uTime * 0.18 - waveProgress * PI * 3.0) * 0.025;
-        float liquidRipple = sin(uTime * 0.25 + waveProgress * PI * 4.0) * 0.015;
-        
-        // Apply all movements with liquid-like flow
-        baseLat = baseLat + 
-                  lateralOffset * 0.3 +  // Reduced lateral for stable smile shape
-                  totalVerticalMovement + 
-                  liquidFlow + liquidWave + liquidRipple;
+        // Base latitude that moves from start to end with controlled animation
+        float baseLat = mix(WAVE_LAT_START, WAVE_LAT_END, waveProgress) + 
+                       lateralOffset + 
+                       totalVerticalMovement;
         
         // Calculate cumulative segment positions
         float seg1End = WAVE_SEG_1_WIDTH;
