@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export class SceneManager {
-    constructor() {
+    constructor(container) {
+        this.container = container;
         this.scene = null;
         this.camera = null;
         this.renderer = null;
@@ -27,9 +28,13 @@ export class SceneManager {
     }
     
     createCamera() {
+        const aspect = this.container ? 
+            this.container.clientWidth / this.container.clientHeight : 
+            window.innerWidth / window.innerHeight;
+            
         this.camera = new THREE.PerspectiveCamera(
             60,
-            window.innerWidth / window.innerHeight,
+            aspect,
             0.1,
             1000
         );
@@ -68,9 +73,16 @@ export class SceneManager {
     
     createRenderer() {
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        if (this.container) {
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.container.appendChild(this.renderer.domElement);
+        } else {
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(this.renderer.domElement);
+        }
+        
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        document.body.appendChild(this.renderer.domElement);
     }
     
     createClock() {
@@ -82,9 +94,15 @@ export class SceneManager {
     }
     
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        if (this.container) {
+            this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        } else {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        }
     }
     
     add(object) {

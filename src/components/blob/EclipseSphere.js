@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import vertexShader from '../shaders/vertexShader.glsl?raw';
-import fragmentShader from '../shaders/fragmentShader.glsl?raw';
+import vertexShader from './vertexShader.glsl?raw';
+import fragmentShader from './fragmentShader.glsl?raw';
 
 export class EclipseSphere {
   constructor(radius = 1.5) {

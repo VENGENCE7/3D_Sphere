@@ -1,63 +1,79 @@
-import { SceneManager } from './scene/SceneManager.js';
-import { EclipseSphere } from './geometry/EclipseSphere.js';
+import { TabNavigation } from './components/TabNavigation.js';
+import { BlobLauncher } from './components/blob/BlobLauncher.js';
+import { GalaxyLauncher } from './components/galaxy/GalaxyLauncher.js';
+import './styles.css';
 
-class EclipseSphereLauncher {
+class Application {
     constructor() {
-        this.sceneManager = null;
-        this.eclipseSphere = null;
-        this.animationId = null;
-        
+        this.currentView = null;
+        this.tabContainer = null;
+        this.viewContainer = null;
         this.init();
     }
     
     init() {
-        // Initialize scene
-        this.sceneManager = new SceneManager();
+        // Create main container structure
+        this.createLayout();
         
-        // Create eclipse sphere with full interactivity
-        this.eclipseSphere = new EclipseSphere(1.5);
-        this.sceneManager.add(this.eclipseSphere.getMesh());
+        // Define tabs
+        const tabs = [
+            { id: 'blob', label: 'Central Blob' },
+            { id: 'galaxy', label: 'Galaxy' }
+        ];
         
-        // Start animation loop
-        this.animate();
+        // Create tab navigation
+        new TabNavigation(this.tabContainer, tabs, (tabId) => {
+            this.switchView(tabId);
+        });
+        
+        // Load initial view
+        this.switchView('blob');
     }
     
-    animate() {
-        this.animationId = requestAnimationFrame(() => this.animate());
+    createLayout() {
+        // Create tab container
+        this.tabContainer = document.createElement('div');
+        this.tabContainer.className = 'tab-container';
+        document.body.appendChild(this.tabContainer);
         
-        // Get elapsed time
-        const elapsedTime = this.sceneManager.getElapsedTime();
+        // Create view container
+        this.viewContainer = document.createElement('div');
+        this.viewContainer.className = 'view-container';
+        document.body.appendChild(this.viewContainer);
+    }
+    
+    switchView(viewId) {
+        // Dispose current view
+        if (this.currentView) {
+            this.currentView.dispose();
+            this.currentView = null;
+        }
         
-        // Get camera for distance calculation
-        const camera = this.sceneManager.getCamera();
+        // Clear view container
+        this.viewContainer.innerHTML = '';
         
-        // Update scene controls (important for zoom functionality)
-        this.sceneManager.update();
-        
-        // Update eclipse sphere with time and camera
-        this.eclipseSphere.update(elapsedTime, camera);
-        
-        // Render the scene
-        this.sceneManager.render();
+        // Load new view
+        switch(viewId) {
+            case 'blob':
+                this.currentView = new BlobLauncher(this.viewContainer);
+                break;
+            case 'galaxy':
+                this.currentView = new GalaxyLauncher(this.viewContainer);
+                break;
+            default:
+                console.error(`Unknown view: ${viewId}`);
+        }
     }
     
     dispose() {
-        if (this.animationId) {
-            cancelAnimationFrame(this.animationId);
-        }
-        
-        if (this.eclipseSphere) {
-            this.eclipseSphere.dispose();
-        }
-        
-        if (this.sceneManager) {
-            this.sceneManager.dispose();
+        if (this.currentView) {
+            this.currentView.dispose();
         }
     }
 }
 
 // Initialize the application
-const app = new EclipseSphereLauncher();
+const app = new Application();
 
 // Export for potential external use
 export default app;
