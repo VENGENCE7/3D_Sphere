@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 
 /**
  * Orbit Class
@@ -8,7 +11,6 @@ export class Orbit {
     constructor(config) {
         // Orbital configuration
         this.radius = config.radius || 10;
-        this.speed = config.speed || 0.001;
         this.inclination = config.inclination || 0; // Degrees
         this.index = config.index || 0;
         
@@ -71,26 +73,29 @@ export class Orbit {
     createOrbitPath() {
         // Create a circle geometry for the orbit path
         const segments = 128;
-        const points = [];
+        const positions = [];
         
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const x = Math.cos(angle) * this.radius;
             const z = Math.sin(angle) * this.radius;
-            points.push(new THREE.Vector3(x, 0, z));
+            positions.push(x, 0, z);
         }
         
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        // Use Line2 geometry for thick lines
+        const geometry = new LineGeometry();
+        geometry.setPositions(positions);
         
-        // Create line material with customizable color and thickness
-        const material = new THREE.LineBasicMaterial({
+        // Use LineMaterial for proper thickness support
+        const material = new LineMaterial({
             color: this.orbitColor,
             opacity: this.orbitOpacity,
             transparent: true,
-            linewidth: this.orbitThickness // Note: linewidth may not work in all renderers
+            linewidth: this.orbitThickness, // This works with LineMaterial
+            worldUnits: false // Use screen units for consistent thickness
         });
         
-        this.orbitPath = new THREE.Line(geometry, material);
+        this.orbitPath = new Line2(geometry, material);
         this.orbitGroup.add(this.orbitPath);
     }
     
@@ -100,6 +105,17 @@ export class Orbit {
      */
     updateMatrix() {
         this.orbitGroup.updateMatrixWorld();
+    }
+    
+    /**
+     * Update material resolution for Line2
+     * @param {number} width - Canvas width
+     * @param {number} height - Canvas height
+     */
+    updateResolution(width, height) {
+        if (this.orbitPath && this.orbitPath.material && this.orbitPath.material.resolution) {
+            this.orbitPath.material.resolution.set(width, height);
+        }
     }
     
     /**

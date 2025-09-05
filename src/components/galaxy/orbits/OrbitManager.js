@@ -1,5 +1,4 @@
 import { Orbit } from './Orbit.js';
-import * as THREE from 'three';
 
 /**
  * OrbitManager Class
@@ -7,47 +6,36 @@ import * as THREE from 'three';
  */
 export class OrbitManager {
     constructor() {
+        // Global orbit styling
+        this.orbitColor = 0x546074;        // #546074
+        this.orbitThickness = 2.0;         // Line thickness
+        this.orbitOpacity = 0.7;           // Line opacity
+        
         // Orbital configurations from GALAXY.md
         this.orbitConfigs = [
             {
                 index: 0,
                 radius: 5,              // Closest to sun
-                speed: 0.003,           // Fastest
                 inclination: 0,         // Flat on XZ plane
-                showPath: true,
-                orbitColor: 0x546074,   // #546074
-                orbitThickness: 2.0,    // Adjust thickness as needed
-                orbitOpacity: 0.4
+                showPath: true
             },
             {
                 index: 1,
                 radius: 8,              // Inner-middle
-                speed: 0.002,           // Fast
                 inclination: -162.171,  // Specific angle
-                showPath: true,
-                orbitColor: 0x546074,   // #546074
-                orbitThickness: 2.0,
-                orbitOpacity: 0.4
+                showPath: true
             },
             {
                 index: 2,
                 radius: 11,             // Outer-middle
-                speed: 0.0015,          // Slow
                 inclination: 14.37,     // Specific angle
-                showPath: true,
-                orbitColor: 0x546074,   // #546074
-                orbitThickness: 2.0,
-                orbitOpacity: 0.4
+                showPath: true
             },
             {
                 index: 3,
                 radius: 14,             // Farthest
-                speed: 0.001,           // Slowest
                 inclination: 45,        // 45 degree tilt
-                showPath: true,
-                orbitColor: 0x546074,   // #546074
-                orbitThickness: 2.0,
-                orbitOpacity: 0.4
+                showPath: true
             }
         ];
         
@@ -63,8 +51,13 @@ export class OrbitManager {
      * Initialize all orbital paths
      */
     init() {
-        this.orbitConfigs.forEach((config, index) => {
-            const orbit = new Orbit(config);
+        this.orbitConfigs.forEach((config) => {
+            const orbit = new Orbit({
+                ...config,
+                orbitColor: this.orbitColor,
+                orbitThickness: this.orbitThickness,
+                orbitOpacity: this.orbitOpacity
+            });
             this.orbits.push(orbit);
         });
     }
@@ -92,6 +85,17 @@ export class OrbitManager {
     update() {
         this.orbits.forEach(orbit => {
             orbit.updateMatrix();
+        });
+    }
+    
+    /**
+     * Update resolution for all orbits (required for Line2)
+     * @param {number} width - Canvas width
+     * @param {number} height - Canvas height
+     */
+    updateResolution(width, height) {
+        this.orbits.forEach(orbit => {
+            orbit.updateResolution(width, height);
         });
     }
     
