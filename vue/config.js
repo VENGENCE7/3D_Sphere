@@ -9,13 +9,16 @@ export const defaultConfig = {
   minZoom: 2.0,                   // Minimum zoom (closest)
   maxZoom: 15.0,                  // Maximum zoom (farthest)
   
-  // Wave parameters (embedded in shaders)
-  waveFrequency: 6.0,             // Ripple frequency within waves
-  waveSpeed: 0.25,                // Wave expansion speed
-  waveThickness: 0.5,             // Ring thickness
-  waveAmplitude: 0.8,             // Base wave height
-  waveMaxAmplitude: 2.2,          // Maximum height at clash point
-  waveCycle: 4.0,                 // Wave repeat cycle in seconds
+  // Wave parameters (note: these are embedded in shaders as constants)
+  // The wave system creates a smile-shaped band in the lower hemisphere
+  // These values are for reference only - to change them, edit the shader directly
+  waveVerticalEnabled: 0.0,       // Vertical movement control (0=off, 1=on)
+  waveHorizontalEnabled: 1.0,     // Horizontal oscillation (0=off, 1=on)
+  waveHorizontalSpeed: 0.2,       // Left-right oscillation speed
+  waveHorizontalAmplitude: 0.08,  // Left-right movement range
+  waveOrganicIntensity: 0.9,      // Overall organic movement intensity
+  waveFlowSpeed: 0.25,             // Primary flow animation speed
+  waveBreathingSpeed: 0.5         // Breathing effect speed
   
   // Visual settings
   backgroundColor: 0x000000,      // Scene background color
