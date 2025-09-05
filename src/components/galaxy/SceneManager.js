@@ -10,6 +10,9 @@ export class SceneManager {
         // Container element
         this.container = container;
         
+        // Resolution update callback
+        this.onResolutionUpdate = null;
+        
         // Three.js core objects
         this.scene = null;
         this.camera = null;
@@ -21,7 +24,7 @@ export class SceneManager {
             fov: 60,
             near: 0.1,
             far: 1000,
-            position: { x: 15, y: 10, z: 15 },
+            position: { x: 0, y: 3, z: 15 },
             lookAt: { x: 0, y: 0, z: 0 }
         };
         
@@ -30,8 +33,8 @@ export class SceneManager {
             current: 15,
             min: 5,
             max: 30,
-            speed: 0.5,
-            smoothing: 0.1
+            speed: 1.0,
+            smoothing: 0.5
         };
         
         // Target zoom for smooth transitions
@@ -212,6 +215,11 @@ export class SceneManager {
         this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        
+        // Update Line2 resolution for orbit rendering
+        if (this.onResolutionUpdate) {
+            this.onResolutionUpdate(this.container.clientWidth, this.container.clientHeight);
+        }
     }
     
     
@@ -255,6 +263,13 @@ export class SceneManager {
      */
     getCamera() {
         return this.camera;
+    }
+    
+    /**
+     * Set resolution update callback
+     */
+    setResolutionUpdateCallback(callback) {
+        this.onResolutionUpdate = callback;
     }
     
     /**

@@ -25,6 +25,19 @@ export class GalaxyLauncher {
             this.sceneManager.getCamera()
         );
         
+        // Set up Line2 resolution updates
+        this.sceneManager.setResolutionUpdateCallback((width, height) => {
+            this.solarSystem.updateResolution(width, height);
+        });
+        
+        // Initialize Line2 resolution
+        if (this.container) {
+            this.solarSystem.updateResolution(
+                this.container.clientWidth, 
+                this.container.clientHeight
+            );
+        }
+        
         // Start animation loop
         this.animate();
     }

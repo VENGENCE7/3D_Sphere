@@ -7,7 +7,7 @@ import { EclipseSphere } from '../../blob/EclipseSphere.js';
  * Scales it properly to maintain visual quality at larger sizes
  */
 export class SunBlob {
-    constructor(targetRadius = 5.5) {
+    constructor(targetRadius = 4.5) {
         this.targetRadius = targetRadius;
         
         // Create the blob at its optimal size

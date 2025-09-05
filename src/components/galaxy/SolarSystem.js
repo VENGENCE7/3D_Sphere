@@ -60,12 +60,9 @@ export class SolarSystem {
     createOrbits() {
         this.orbitManager = new OrbitManager();
         
-        // Add visual orbit paths to the scene
+        // Add orbit groups to the scene (includes inclination transformations)
         this.orbitManager.getAllOrbits().forEach(orbit => {
-            const orbitLine = orbit.getOrbitLine();
-            if (orbitLine) {
-                this.scene.add(orbitLine);
-            }
+            this.scene.add(orbit.getGroup());
         });
     }
     
@@ -131,6 +128,17 @@ export class SolarSystem {
             // Update planet (position, animation, dynamic sizing)
             planet.update(this.time, position, this.camera);
         });
+    }
+    
+    /**
+     * Update Line2 resolution for orbit rendering
+     * @param {number} width - Canvas width
+     * @param {number} height - Canvas height
+     */
+    updateResolution(width, height) {
+        if (this.orbitManager) {
+            this.orbitManager.updateResolution(width, height);
+        }
     }
     
     /**

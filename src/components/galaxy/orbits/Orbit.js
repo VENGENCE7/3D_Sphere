@@ -11,7 +11,8 @@ export class Orbit {
     constructor(config) {
         // Orbital configuration
         this.radius = config.radius || 10;
-        this.inclination = config.inclination || 0; // Degrees
+        this.ellipticalRatio = config.ellipticalRatio || 0.8; // Semi-minor axis ratio (0.8 = 80% of major axis)
+        this.inclination = config.inclination || 0; // degrees
         this.index = config.index || 0;
         
         // Orbit visual configuration
@@ -48,22 +49,8 @@ export class Orbit {
         // Convert inclination from degrees to radians
         const inclinationRad = THREE.MathUtils.degToRad(this.inclination);
         
-        // Apply rotation to achieve the specified inclination
-        // Using different axes for variety in orbital planes
-        if (this.index === 0) {
-            // First orbit - flat on XZ plane
-            this.orbitGroup.rotation.x = 0;
-        } else if (this.index === 1) {
-            // Second orbit - rotated around Z axis
-            this.orbitGroup.rotation.z = inclinationRad;
-        } else if (this.index === 2) {
-            // Third orbit - rotated around X axis
-            this.orbitGroup.rotation.x = inclinationRad;
-        } else {
-            // Fourth orbit - combination rotation
-            this.orbitGroup.rotation.x = inclinationRad * 0.7;
-            this.orbitGroup.rotation.z = inclinationRad * 0.3;
-        }
+        // Apply rotation for sideways (left/right) tilting using Z-axis
+        this.orbitGroup.rotation.z = inclinationRad;
     }
     
     
@@ -71,15 +58,19 @@ export class Orbit {
      * Create visual orbit path
      */
     createOrbitPath() {
-        // Create a circle geometry for the orbit path
+        // Create an elliptical geometry for the orbit path
         const segments = 128;
         const positions = [];
         
+        // Semi-major axis (a) and semi-minor axis (b)
+        const a = this.radius; // Semi-major axis
+        const b = this.radius * this.ellipticalRatio; // Semi-minor axis
+        
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
-            const x = Math.cos(angle) * this.radius;
-            const z = Math.sin(angle) * this.radius;
-            positions.push(x, 0, z);
+            const x = Math.cos(angle) * a; // Major axis along X
+            const z = Math.sin(angle) * b; // Minor axis along Z
+            positions.push(x, 0, z); // Y is 0 in local space, displacement handled by group position
         }
         
         // Use Line2 geometry for thick lines
@@ -124,9 +115,15 @@ export class Orbit {
      * @returns {THREE.Vector3} Position on orbit
      */
     getPositionAtAngle(angle) {
-        // Calculate position on the orbit
-        const x = Math.cos(angle) * this.radius;
-        const z = Math.sin(angle) * this.radius;
+        // Ensure matrix is updated before using it
+        this.orbitGroup.updateMatrixWorld(true);
+        
+        // Calculate elliptical position on the orbit
+        const a = this.radius; // Semi-major axis
+        const b = this.radius * this.ellipticalRatio; // Semi-minor axis
+        
+        const x = Math.cos(angle) * a; // Major axis along X
+        const z = Math.sin(angle) * b; // Minor axis along Z
         const localPosition = new THREE.Vector3(x, 0, z);
         
         // Transform to world position considering inclination
