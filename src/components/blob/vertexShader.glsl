@@ -1160,7 +1160,7 @@ void main() {
     // Screen position and point sizing
     vec4 mvPosition = modelViewMatrix * vec4(displaced, 1.0);
     
-    float baseSize = 6.0;
+    float baseSize = 10.0;
     float randomSize = 0.95 + aRandom * 0.1;
     
     // Zoom scaling with proper dot size adjustment
