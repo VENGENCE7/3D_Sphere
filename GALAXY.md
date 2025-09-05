@@ -12,17 +12,65 @@ src/
     └── galaxy/
         ├── GalaxyLauncher.js      # Entry point and initialization
         ├── SceneManager.js        # Three.js scene setup for galaxy
-        ├── SolarSystem.js         # Main file that combines Sun, orbits, and planets
-        ├── StarField.js           # Background star generation
-        ├── Orbit.js               # Orbital path class with rotation logic
-        ├── PlanetBlob.js          # Reusable Blob component for planets (similar to EclipseSphere)
-        ├── planetsConfig.js       # Configuration file for all 8 planets
-        └── shaders/
-            ├── planetVertex.glsl  # Vertex shader for planet blobs
-            ├── planetFragment.glsl # Fragment shader for planet blobs
-            ├── starVertex.glsl    # Vertex shader for background stars
-            └── starFragment.glsl  # Fragment shader for background stars
+        ├── SolarSystem.js         # Main file that combines all components
+        │
+        ├── background/            # Background elements folder
+        │   ├── StarField.js       # Star generation and management
+        │   └── shaders/
+        │       ├── starVertex.glsl    # Vertex shader for stars
+        │       └── starFragment.glsl  # Fragment shader for stars
+        │
+        ├── sun/                   # Sun component folder
+        │   ├── SunBlob.js         # Sun blob import and configuration
+        │   └── shaders/
+        │       ├── sunVertex.glsl     # Sun-specific vertex shader
+        │       └── sunFragment.glsl   # Sun-specific fragment shader
+        │
+        ├── orbits/                # Orbital system folder
+        │   ├── Orbit.js           # Orbital path class
+        │   ├── OrbitManager.js    # Manages all 4 orbits
+        │   └── shaders/
+        │       ├── orbitVertex.glsl   # Orbit visualization vertex shader
+        │       └── orbitFragment.glsl # Orbit visualization fragment shader
+        │
+        ├── planets/               # Planet system folder
+        │   ├── PlanetBlob.js      # Reusable blob component
+        │   ├── planetsConfig.js   # Configuration for all 8 planets
+        │   └── shaders/
+        │       ├── planetVertex.glsl  # Planet vertex shader
+        │       └── planetFragment.glsl # Planet fragment shader
+        │
+        └── utils/                 # Utility functions
+            └── constants.js       # Shared constants and configurations
 ```
+
+### IMPORTANT DEVELOPMENT GUIDELINES
+
+1. **NEVER MODIFY THE BLOB FOLDER**:
+   - The `/src/components/blob/` folder is sacred and should NEVER be changed
+   - Any modifications needed for the sun should be done in the `galaxy/sun/` folder only
+   - Create wrapper components or extended versions in galaxy folder if needed
+
+2. **Modular Structure**: 
+   - Each aspect of the galaxy (background, sun, orbits, planets) MUST be in its own folder
+   - Each folder contains its own shaders and related files
+   - No mixing of concerns between folders
+
+2. **Shader Organization**:
+   - Every component folder has its own shaders/ subfolder
+   - Shaders are specific to their component (starVertex.glsl in background/, planetVertex.glsl in planets/, etc.)
+   - This ensures clean separation and easy maintenance
+   - **MANDATORY**: Import GLSL files using `?raw` suffix (e.g., `import shader from './shaders/file.glsl?raw'`)
+
+3. **After Each TODO Completion**:
+   - **MANDATORY**: Re-read the GALAXY.md context file after completing each TODO
+   - This ensures no specifications are forgotten
+   - Maintains consistency throughout development
+
+4. **Clean Code Practices**:
+   - Each class should have clear documentation
+   - Methods should be well-organized and single-purpose
+   - Use descriptive names for all files and functions
 
 ### File Responsibilities
 

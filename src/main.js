@@ -17,8 +17,8 @@ class Application {
         
         // Define tabs
         const tabs = [
+            { id: 'galaxy', label: 'Galaxy' },
             { id: 'blob', label: 'Central Blob' },
-            { id: 'galaxy', label: 'Galaxy' }
         ];
         
         // Create tab navigation
@@ -27,7 +27,7 @@ class Application {
         });
         
         // Load initial view
-        this.switchView('blob');
+        this.switchView('galaxy');
     }
     
     createLayout() {
