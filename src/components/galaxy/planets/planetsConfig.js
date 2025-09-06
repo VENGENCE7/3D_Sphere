@@ -18,7 +18,7 @@ export const globalLiquidMovement = {
 };
 
 // Global transparency for all planets (0.0 = fully transparent, 1.0 = fully opaque)
-export const globalTransparency = 0.7; // 85% transparency
+export const globalTransparency = 1.0; // 85% transparency
 
 // Global blobness for all planets (controls deformation amount)
 export const globalBlobness = 0.3; // Default blob deformation
@@ -28,19 +28,19 @@ export const globalColorCoverage = 0.65; // 65% of sphere is colored from rim
 
 // Global shader controls for glow and effects
 export const globalShaderControls = {
-  rimGlowIntensity: 1.8, // Rim glow strength
-  rimGlowWidth: 4.0, // Rim glow width (higher = tighter)
+  rimGlowIntensity: 1.0, // Rim glow strength
+  rimGlowWidth: 1.0, // Rim glow width (higher = tighter)
   auraIntensity: 1.5, // Aura glow strength
-  auraWidth: 2.0, // Aura width (higher = tighter)
-  specularIntensity: 0.8, // Specular highlight strength
-  specularSharpness: 24.0, // Specular sharpness (higher = sharper)
+  auraWidth: 0.75, // Aura width (higher = tighter)
+  specularIntensity: 0.0, // Specular highlight strength
+  specularSharpness: 2.0, // Specular sharpness (higher = sharper)
   boundaryGlow: 0.8, // Glow at color/black boundary
-  surfaceGlow: 0.4, // Glow from surface distortion
-  shimmerIntensity: 0.1, // Shimmer animation strength
-  overallBoost: 1.3, // Overall brightness multiplier
-  blackTint: 0.003, // Color bleed into black areas
+  surfaceGlow: 0.0, // Glow from surface distortion
+  shimmerIntensity: 0.0, // Shimmer animation strength
+  overallBoost: 1.5, // Overall brightness multiplier
+  blackTint: 0.0, // Color bleed into black areas
   breathingIntensity: 0.15, // Breathing effect strength (reduced for smoothness)
-  pulseIntensity: 0.08, // Pulse effect strength (subtle for 60FPS)
+  pulseIntensity: 0.03, // Pulse effect strength (subtle for 60FPS)
 };
 
 export const planetsConfig = [
@@ -49,7 +49,6 @@ export const planetsConfig = [
     orbitIndex: 1,
     angle: 320,
     text: '',
-    seed: 42.7,
     color: {
       base: '#B9B9B9',
       glowIntensity: 0.7,
@@ -119,9 +118,9 @@ export const planetsConfig = [
       base: '#59C1CC',
       glowIntensity: 0.7,
     },
-    size: 0.95,
+    size: 0.75,
     textColor: '#FFFFFF',
-    textSize: 2.5,
+    textSize: 2.0,
   },
   {
     id: '7',

@@ -1,11 +1,13 @@
 # Galaxy - Solar System Project Context & Documentation
 
 ## Overview
+
 The Galaxy component is a custom solar system visualization featuring the Blob/Eclipse sphere as the Sun, with 8 planets orbiting in 4 distinct orbital paths, all set against a space-like starfield background.
 
 ## Architecture
 
 ### Core Files Structure
+
 ```
 src/
 └── components/
@@ -47,27 +49,31 @@ src/
 ### IMPORTANT DEVELOPMENT GUIDELINES
 
 1. **NEVER MODIFY THE BLOB FOLDER**:
+
    - The `/src/components/blob/` folder is sacred and should NEVER be changed
    - Any modifications needed for the sun should be done in the `galaxy/sun/` folder only
    - Create wrapper components or extended versions in galaxy folder if needed
 
-2. **Modular Structure**: 
+2. **Modular Structure**:
+
    - Each aspect of the galaxy (background, sun, orbits, planets) MUST be in its own folder
    - Each folder contains its own shaders and related files
    - No mixing of concerns between folders
 
-2. **Shader Organization**:
+3. **Shader Organization**:
+
    - Every component folder has its own shaders/ subfolder
    - Shaders are specific to their component (starVertex.glsl in background/, planetVertex.glsl in planets/, etc.)
    - This ensures clean separation and easy maintenance
    - **MANDATORY**: Import GLSL files using `?raw` suffix (e.g., `import shader from './shaders/file.glsl?raw'`)
 
-3. **After Each TODO Completion**:
+4. **After Each TODO Completion**:
+
    - **MANDATORY**: Re-read the GALAXY.md context file after completing each TODO
    - This ensures no specifications are forgotten
    - Maintains consistency throughout development
 
-4. **Clean Code Practices**:
+5. **Clean Code Practices**:
    - Each class should have clear documentation
    - Methods should be well-organized and single-purpose
    - Use descriptive names for all files and functions
@@ -75,6 +81,7 @@ src/
 ### File Responsibilities
 
 1. **SolarSystem.js** (Main Coordinator)
+
    - Imports and creates the Sun (Blob/Eclipse sphere)
    - Creates 8 PlanetBlob instances using planetsConfig
    - Imports and manages Orbit instances
@@ -83,17 +90,19 @@ src/
    - Handles the overall solar system logic
 
 2. **Orbit.js** (Orbital Mechanics)
+
    - Defines orbital path geometry
    - Handles orbital inclination/rotation
    - Manages orbital speed
    - Provides position calculations for planets
 
 3. **PlanetBlob.js** (Reusable Planet Component)
+
    - Similar structure to EclipseSphere but simplified
    - Blob-like organic shape as shown in planet.png
    - Smooth, rounded irregular form with liquid-like organic movement
    - **Surface Rendering**: Smooth continuous surface (NOT dots/points)
-   - **Gradient System**: 
+   - **Gradient System**:
      - Colors fade from given color to black
      - Solid colors with smooth gradient shading
      - Soft, glowing appearance with highlight areas
@@ -111,6 +120,7 @@ src/
    - Easy to modify without touching code
 
 ### Planet Configuration Structure (planetsConfig.js)
+
 ```javascript
 // Fully customizable planet configuration
 // All planets use blob-like organic shapes as shown in planet.png
@@ -119,81 +129,81 @@ export const planetsConfig = [
   {
     // Planet 1 - Orbit 1 (Gray)
     id: 'planet1',
-    orbitIndex: 0,  // First orbit
-    
+    orbitIndex: 0, // First orbit
+
     // Visual Properties (Blob Style)
-    size: 0.3,  // Blob size (0.1 to 1.0 recommended)
-    blobness: 0.15,  // How irregular the shape is (0 = sphere, 0.3 = very blobby)
-    
+    size: 0.3, // Blob size (0.1 to 1.0 recommended)
+    blobness: 0.15, // How irregular the shape is (0 = sphere, 0.3 = very blobby)
+
     // Text Label (shown inside blob)
-    text: 'MERCURY',  // Change to any text you want
-    textColor: '#FFFFFF',  // Any hex color
-    textSize: 0.08,  // Text scale relative to planet
-    textFont: 'Arial',  // Font family
-    textWeight: 'bold',  // Font weight (normal, bold)
-    
+    text: 'MERCURY', // Change to any text you want
+    textColor: '#FFFFFF', // Any hex color
+    textSize: 0.08, // Text scale relative to planet
+    textFont: 'Arial', // Font family
+    textWeight: 'bold', // Font weight (normal, bold)
+
     // Color Configuration (Gradient to black)
     color: {
-      base: '#B9B9B9',  // Light gray primary blob color
-      gradient: ['#B9B9B9', '#8A8A8A', '#5A5A5A', '#2A2A2A', '#000000'],  // Fade to black
-      glowIntensity: 0.3  // Soft glow strength
+      base: '#B9B9B9', // Light gray primary blob color
+      gradient: ['#B9B9B9', '#8A8A8A', '#5A5A5A', '#2A2A2A', '#000000'], // Fade to black
+      glowIntensity: 0.3, // Soft glow strength
     },
-    
+
     // Liquid Animation Settings (60 FPS optimized)
     liquidMovement: {
       enabled: true,
-      waveSpeed: 0.5,       // Slow wave speed for 60 FPS
-      waveAmplitude: 0.15,  // Subtle deformation
-      breathingSpeed: 0.3,  // Gentle breathing
+      waveSpeed: 0.5, // Slow wave speed for 60 FPS
+      waveAmplitude: 0.15, // Subtle deformation
+      breathingSpeed: 0.3, // Gentle breathing
       breathingScale: 0.05, // Small scale changes
-      noiseScale: 2.5,      // Organic noise pattern size
-      flowSpeed: 0.2        // Liquid flow animation
+      noiseScale: 2.5, // Organic noise pattern size
+      flowSpeed: 0.2, // Liquid flow animation
     },
-    
+
     // Material Properties
     material: {
-      metalness: 0.3,  // 0 = matte, 1 = metallic
-      roughness: 0.8,  // 0 = smooth, 1 = rough
-      emissiveIntensity: 0.1  // Glow strength
+      metalness: 0.3, // 0 = matte, 1 = metallic
+      roughness: 0.8, // 0 = smooth, 1 = rough
+      emissiveIntensity: 0.1, // Glow strength
     },
-    
+
     // Animation
     rotation: {
-      speed: 0.005,  // Self-rotation speed
-      axis: { x: 0, y: 1, z: 0.1 }  // Rotation axis tilt
+      speed: 0.005, // Self-rotation speed
+      axis: { x: 0, y: 1, z: 0.1 }, // Rotation axis tilt
     },
-    
+
     // Orbital Position
-    startAngle: 0,  // Starting position in radians (0 to 2*PI)
-    
+    startAngle: 0, // Starting position in radians (0 to 2*PI)
+
     // Optional Features
     features: {
-      hasRings: false,  // Enable/disable rings
+      hasRings: false, // Enable/disable rings
       ringColor: '#CCCCCC',
       ringOpacity: 0.5,
-      hasAtmosphere: false,  // Enable/disable atmosphere
+      hasAtmosphere: false, // Enable/disable atmosphere
       atmosphereColor: '#88CCFF',
-      atmosphereScale: 1.2
-    }
+      atmosphereScale: 1.2,
+    },
   },
-  
+
   {
-    // Planet 2 - Orbit 1 (Gray - opposite side)  
+    // Planet 2 - Orbit 1 (Gray - opposite side)
     id: 'planet2',
     orbitIndex: 0,
     size: 0.4,
     blobness: 0.15,
-    text: 'VENUS',  // Customize this text
+    text: 'VENUS', // Customize this text
     textColor: '#FFFFFF',
     textSize: 0.1,
     textFont: 'Arial',
     textWeight: 'bold',
     color: {
-      base: '#B9B9B9',  // Gray (same as planet 1)
-      gradient: ['#B9B9B9', '#8A8A8A', '#5A5A5A', '#2A2A2A', '#000000'],  // Fade to black
-      glowIntensity: 0.3
+      base: '#B9B9B9', // Gray (same as planet 1)
+      gradient: ['#B9B9B9', '#8A8A8A', '#5A5A5A', '#2A2A2A', '#000000'], // Fade to black
+      glowIntensity: 0.3,
     },
-    
+
     // Liquid Animation Settings (60 FPS optimized)
     liquidMovement: {
       enabled: true,
@@ -202,94 +212,94 @@ export const planetsConfig = [
       breathingSpeed: 0.3,
       breathingScale: 0.05,
       noiseScale: 2.5,
-      flowSpeed: 0.2
+      flowSpeed: 0.2,
     },
     material: {
       metalness: 0.2,
       roughness: 0.7,
-      emissiveIntensity: 0.15
+      emissiveIntensity: 0.15,
     },
     rotation: {
       speed: 0.003,
-      axis: { x: 0.05, y: 1, z: 0 }
+      axis: { x: 0.05, y: 1, z: 0 },
     },
-    startAngle: Math.PI,  // Opposite side (180°)
+    startAngle: Math.PI, // Opposite side (180°)
     features: {
       hasRings: false,
       hasAtmosphere: true,
       atmosphereColor: '#FFCC66',
-      atmosphereScale: 1.1
-    }
+      atmosphereScale: 1.1,
+    },
   },
-  
+
   {
     // Planet 3 - Middle Orbit
     id: 'planet3',
-    orbitIndex: 1,  // Middle orbit
+    orbitIndex: 1, // Middle orbit
     size: 0.35,
     blobness: 0.15,
-    text: 'EARTH',  // Customize this text
+    text: 'EARTH', // Customize this text
     textColor: '#FFFFFF',
     textSize: 0.09,
     textFont: 'Arial',
     textWeight: 'bold',
     color: {
-      base: '#CE7F01',  // Orange-brown primary blob color
-      highlight: '#EE9F21',  // Lighter orange highlight
-      shadow: '#AE5F00',  // Darker orange-brown shadow
-      glowIntensity: 0.3
+      base: '#CE7F01', // Orange-brown primary blob color
+      highlight: '#EE9F21', // Lighter orange highlight
+      shadow: '#AE5F00', // Darker orange-brown shadow
+      glowIntensity: 0.3,
     },
     material: {
       metalness: 0.1,
       roughness: 0.6,
-      emissiveIntensity: 0.05
+      emissiveIntensity: 0.05,
     },
     rotation: {
       speed: 0.01,
-      axis: { x: 0.4, y: 1, z: 0 }  // Tilted axis
+      axis: { x: 0.4, y: 1, z: 0 }, // Tilted axis
     },
     startAngle: 0,
     features: {
       hasRings: false,
-      hasAtmosphere: false
-    }
+      hasAtmosphere: false,
+    },
   },
-  
+
   {
     // Planet 4 - Middle Orbit
     id: 'planet4',
-    orbitIndex: 1,  // Middle orbit
+    orbitIndex: 1, // Middle orbit
     size: 0.38,
     blobness: 0.15,
-    text: 'MARS',  // Customize this text
+    text: 'MARS', // Customize this text
     textColor: '#FFFFFF',
     textSize: 0.09,
     textFont: 'Arial',
     textWeight: 'bold',
     color: {
-      base: '#00C77F',  // Green primary blob color
-      highlight: '#00E79F',  // Lighter green highlight
-      shadow: '#00A75F',  // Darker green shadow
-      glowIntensity: 0.3
+      base: '#00C77F', // Green primary blob color
+      highlight: '#00E79F', // Lighter green highlight
+      shadow: '#00A75F', // Darker green shadow
+      glowIntensity: 0.3,
     },
     material: {
       metalness: 0.15,
       roughness: 0.65,
-      emissiveIntensity: 0.08
+      emissiveIntensity: 0.08,
     },
     rotation: {
       speed: 0.008,
-      axis: { x: 0.2, y: 1, z: 0 }
+      axis: { x: 0.2, y: 1, z: 0 },
     },
-    startAngle: Math.PI,  // Opposite side (180 degrees)
+    startAngle: Math.PI, // Opposite side (180 degrees)
     features: {
       hasRings: false,
-      hasAtmosphere: false
-    }
+      hasAtmosphere: false,
+    },
   },
-  
+
   // Add planets 5-6 with your custom configurations...
-]
+];
 
 // Example custom planet configuration:
 /*
@@ -327,6 +337,7 @@ export const planetsConfig = [
 ```
 
 ### Text Display Features
+
 - **Text Inside Blob**: Each planet blob contains text that is ALWAYS visible from the front
 - **Front-Facing Visibility**: Text is always readable when viewing from the front, regardless of planet rotation
 - **Text Properties**:
@@ -344,7 +355,8 @@ export const planetsConfig = [
 ### Interaction System
 
 #### Camera Controls
-- **Zoom In/Out Only**: 
+
+- **Zoom In/Out Only**:
   - Mouse wheel for zoom control
   - Touch pinch gestures for mobile
   - Zoom limits: Min 5 units, Max 30 units from center
@@ -352,7 +364,9 @@ export const planetsConfig = [
   - No rotation or panning - fixed viewing angle
 
 #### Solar System Animation
+
 - **Central Sun**: The existing Blob/Eclipse sphere at the center
+
   - Maintains all its animations (waves, colors, membrane)
   - Acts as the gravitational center
   - Stationary at origin (0, 0, 0)
@@ -366,7 +380,6 @@ export const planetsConfig = [
     - Orbit 2: -162.171°
     - Orbit 3: 14.37°
     - Orbit 4: 45°
-  
 - **Planet Behavior**:
   - Planets rotate on their own axis while orbiting
   - Text labels inside planets always face the viewer
@@ -379,6 +392,7 @@ export const planetsConfig = [
 ## Implementation Status
 
 ### Current State
+
 - Basic launcher file exists
 - Tab navigation integration complete
 - Scene manager needs implementation
@@ -389,12 +403,14 @@ export const planetsConfig = [
 ### Visual Elements
 
 #### 1. Space Background
+
 - Starfield with varying star sizes and brightness
 - Static stars to resemble deep space
 - Dark space-like background color (#000000 or deep blue)
 - Possible nebula or galaxy textures in background
 
 #### 2. The Sun (Center)
+
 - **Uses existing Blob/Eclipse sphere** from the Blob component
 - Positioned at origin (0, 0, 0)
 - Maintains all its wave animations and color gradients
@@ -402,6 +418,7 @@ export const planetsConfig = [
 - Possible emission of light affecting planets
 
 #### 3. Orbital System
+
 - **4 Orbital Rings** at different distances from the Sun:
   - Orbit 1: Closest to the Sun
   - Orbit 2: Inner-middle distance
@@ -411,6 +428,7 @@ export const planetsConfig = [
 - Each orbit at a different inclination for visual interest
 
 #### 4. Planets
+
 - **8 Total Planets** (2 per orbit, same color pair per orbit):
   - Orbit 1: 2 gray planets (#B9B9B9) - fastest rotation
   - Orbit 2: 2 cyan planets (#00C5C5) - fast rotation
@@ -429,6 +447,7 @@ export const planetsConfig = [
 ### Animation System
 
 #### Orbital Motion
+
 - Planets orbit around the Sun at different speeds
 - Inner planets move faster (Kepler's laws)
 - Planets on same orbit have different starting positions (180° apart)
@@ -436,6 +455,7 @@ export const planetsConfig = [
 - Independent rotation of each planet on its axis
 
 #### Sun Animation
+
 - Maintains all Blob animations:
   - Wave band system
   - Color gradients
@@ -443,6 +463,7 @@ export const planetsConfig = [
   - Possible pulsing to simulate solar activity
 
 ### Interaction Controls
+
 - Camera controls to view from different angles
 - Zoom in/out to see full system or focus on planets
 - Click on planets for information (optional)
@@ -452,11 +473,13 @@ export const planetsConfig = [
 ## Technical Requirements
 
 ### Performance Targets
+
 - Target: 60 FPS with all planets and Sun animations
 - WebGL 2.0 support required
 - Efficient rendering for multiple animated objects
 
 ### Shader System
+
 - Background star rendering (point sprites)
 - Planet shading with proper lighting from Sun
 - Possible glow effects for Sun
@@ -465,92 +488,100 @@ export const planetsConfig = [
 ## Development Tasks
 
 ### Phase 1: Core Structure
+
 - [x] Update GALAXY.md with solar system specifications
 - [ ] Create space background with stars
 - [ ] Import and position the Blob/Eclipse sphere as the Sun
 - [ ] Set up scene manager for solar system
 
 ### Phase 2: Orbital System
+
 - [ ] Create 4 orbital paths around the Sun
 - [ ] Add 2 planets to each orbit (8 planets total)
 - [ ] Implement orbital motion for planets
 - [ ] Add planet rotation on axis
 
 ### Phase 3: Visual Enhancement
+
 - [ ] Add different colors/textures to planets
 - [ ] Implement orbital path visualization
 - [ ] Add lighting effects from Sun
 - [ ] Create planet atmosphere effects
 
 ### Phase 4: Interaction & Controls
+
 - [ ] Implement camera controls
 - [ ] Add zoom functionality
 - [ ] Create speed controls for orbits
 - [ ] Add pause/play functionality
 
 ## Configuration Parameters
+
 ```javascript
 // Solar System Configuration
 solarSystemConfig = {
   // Background
-  starCount: 5000,            // Background stars
-  starFieldRadius: 100,       // Distribution radius
-  
+  starCount: 5000, // Background stars
+  starFieldRadius: 100, // Distribution radius
+
   // Sun (Blob)
-  sunScale: 1.0,              // Scale of the Blob sphere
-  sunPosition: [0, 0, 0],     // Center of system
-  
+  sunScale: 1.0, // Scale of the Blob sphere
+  sunPosition: [0, 0, 0], // Center of system
+
   // Orbital Configuration
   orbits: [
     {
-      radius: 5,              // Orbit 1 - Closest
-      speed: 0.003,           // Fastest
-      inclination: 0,         // Orbital tilt (flat on XZ plane)
+      radius: 5, // Orbit 1 - Closest
+      speed: 0.003, // Fastest
+      inclination: 0, // Orbital tilt (flat on XZ plane)
       planets: 2,
-      planetColor: '#B9B9B9'  // Gray planets
+      planetColor: '#B9B9B9', // Gray planets
     },
     {
-      radius: 8,              // Orbit 2 - Inner-middle
-      speed: 0.002,           // Fast speed
-      inclination: -162.171,  // Specific rotation angle in degrees
+      radius: 8, // Orbit 2 - Inner-middle
+      speed: 0.002, // Fast speed
+      inclination: -162.171, // Specific rotation angle in degrees
       planets: 2,
-      planetColor: '#00C5C5'  // Cyan planets
+      planetColor: '#00C5C5', // Cyan planets
     },
     {
-      radius: 11,             // Orbit 3 - Outer-middle
-      speed: 0.0015,          // Slow speed
-      inclination: 14.37,     // Specific rotation angle in degrees
+      radius: 11, // Orbit 3 - Outer-middle
+      speed: 0.0015, // Slow speed
+      inclination: 14.37, // Specific rotation angle in degrees
       planets: 2,
-      planetColor: '#CE7F01'  // Orange planets
+      planetColor: '#CE7F01', // Orange planets
     },
     {
-      radius: 14,             // Orbit 4 - Farthest
-      speed: 0.001,           // Slowest
-      inclination: 45,        // 45 degree tilt
+      radius: 14, // Orbit 4 - Farthest
+      speed: 0.001, // Slowest
+      inclination: 45, // 45 degree tilt
       planets: 2,
-      planetColor: '#00C77F'  // Green planets
-    }
+      planetColor: '#00C77F', // Green planets
+    },
   ],
-  
+
   // Planet Configuration (defined per orbit in orbits array above)
-  planetRotationSpeed: 0.01,  // Self-rotation speed
-  
+  planetRotationSpeed: 0.01, // Self-rotation speed
+
   // Camera
   initialCameraPosition: [15, 10, 15],
-  cameraLookAt: [0, 0, 0]
-}
+  cameraLookAt: [0, 0, 0],
+};
 ```
 
 ## Integration with Main App
 
 ### Tab Navigation
+
 - Accessible via "Galaxy" tab
 - Shares container with Blob view
 - Proper cleanup on view switch
 - Memory management for large particle counts
 
 ## Notes & Ideas
+
 [Space for brainstorming and requirements]
+
 - Consider adding asteroid belts
 - Possible comet trails
 - Black hole gravitational effects
@@ -560,11 +591,13 @@ solarSystemConfig = {
 - Time-lapse evolution
 
 ## References
+
 - Three.js particle systems
 - GPU instancing techniques
 - Astronomical visualization best practices
 - Performance optimization strategies
 
 ---
-*Created: December 2024*
-*Status: Planning Phase*
+
+_Created: December 2024_
+_Status: Planning Phase_

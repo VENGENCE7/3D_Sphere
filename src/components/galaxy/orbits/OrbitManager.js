@@ -19,20 +19,20 @@ export class OrbitManager {
     this.orbitConfigs = [
       {
         index: 0,
-        inclination: 8,   // Z-axis rotation (sideways)
-        tiltY: 0,         // Y-axis rotation (horizontal)
+        inclination: 8, // Z-axis rotation (sideways)
+        tiltY: 0, // Y-axis rotation (horizontal)
         showPath: true,
       },
       {
         index: 1,
         inclination: -10, // Z-axis rotation (sideways)
-        tiltY: 0,        // Y-axis rotation (horizontal)
+        tiltY: 0, // Y-axis rotation (horizontal)
         showPath: true,
       },
       {
         index: 2,
         inclination: -20, // Z-axis rotation (sideways)
-        tiltY: 0,       // Y-axis rotation (horizontal)
+        tiltY: 0, // Y-axis rotation (horizontal)
         showPath: true,
       },
     ];

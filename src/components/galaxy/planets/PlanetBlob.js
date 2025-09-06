@@ -22,10 +22,10 @@ export class PlanetBlob {
     this.size = config.size || 0.5;
     this.blobness =
       config.blobness !== undefined ? config.blobness : globalBlobness; // Use global or individual blobness
-    
+
     // Unique seed for each planet's random deformation
     this.seed = config.seed || Math.random() * 1000;
-    
+
     // Color coverage from rim (how much of sphere is colored vs black)
     this.colorCoverage =
       config.colorCoverage !== undefined
@@ -145,16 +145,16 @@ export class PlanetBlob {
       // First split by newline characters
       const paragraphs = text.split('\n');
       const lines = [];
-      
+
       for (const paragraph of paragraphs) {
         const words = paragraph.trim().split(' ');
         let currentLine = words[0] || '';
 
         for (let i = 1; i < words.length; i++) {
           const word = words[i];
-          const testLine = currentLine ? currentLine + " " + word : word;
+          const testLine = currentLine ? currentLine + ' ' + word : word;
           const width = context.measureText(testLine).width;
-          
+
           if (width < maxWidth) {
             currentLine = testLine;
           } else {
@@ -191,15 +191,15 @@ export class PlanetBlob {
     // Wrap text to fit
     const maxWidth = canvas.width * 0.8; // 80% of canvas width
     const lines = wrapText(this.text, maxWidth);
-    
+
     // Calculate line height and starting position
     const lineHeight = fontSize * 1.2;
     const totalHeight = lines.length * lineHeight;
-    const startY = (canvas.height / 2) - (totalHeight / 2) + (lineHeight / 2);
+    const startY = canvas.height / 2 - totalHeight / 2 + lineHeight / 2;
 
     // Draw each line
     lines.forEach((line, index) => {
-      const y = startY + (index * lineHeight);
+      const y = startY + index * lineHeight;
       context.fillText(line, canvas.width / 2, y);
     });
 
@@ -221,8 +221,8 @@ export class PlanetBlob {
     // Apply individual text size from config
     const textSizeScale = this.textSize || 1.0;
     this.textMesh.scale.set(
-      this.size * 2.5 * scaleMultiplier * textSizeScale, 
-      this.size * 1.25 * scaleMultiplier * textSizeScale, 
+      this.size * 2.5 * scaleMultiplier * textSizeScale,
+      this.size * 1.25 * scaleMultiplier * textSizeScale,
       1
     );
   }
