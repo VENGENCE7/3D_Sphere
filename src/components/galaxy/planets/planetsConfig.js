@@ -1,242 +1,163 @@
 /**
  * Planet configurations for the solar system
- * 8 planets across 4 orbits (2 planets per orbit)
- * Each orbit has planets of the same color placed 180° apart
+ * 8 stationary planets across 3 orbits
+ * Orbit 0: 3 planets at fixed positions
+ * Orbit 1: 2 planets at fixed positions
+ * Orbit 2: 3 planets at fixed positions
  */
 
+// Global liquid movement settings for all planets (optimized for 60FPS)
+export const globalLiquidMovement = {
+  enabled: true,
+  waveSpeed: 0.3, // Slower for smooth 60FPS
+  waveAmplitude: 0.08, // Subtle deformation
+  breathingSpeed: 0.25, // Gentle breathing
+  breathingScale: 0.03, // Small scale changes
+  noiseScale: 2.0, // Noise frequency
+  flowSpeed: 0.15, // Organic flow speed
+};
+
+// Global transparency for all planets (0.0 = fully transparent, 1.0 = fully opaque)
+export const globalTransparency = 0.7; // 85% transparency
+
+// Global blobness for all planets (controls deformation amount)
+export const globalBlobness = 0.3; // Default blob deformation
+
+// Global color coverage from rim (0.1 = 10% colored rim, 0.9 = 90% colored)
+export const globalColorCoverage = 0.65; // 65% of sphere is colored from rim
+
+// Global shader controls for glow and effects
+export const globalShaderControls = {
+  rimGlowIntensity: 1.8, // Rim glow strength
+  rimGlowWidth: 4.0, // Rim glow width (higher = tighter)
+  auraIntensity: 1.5, // Aura glow strength
+  auraWidth: 2.0, // Aura width (higher = tighter)
+  specularIntensity: 0.8, // Specular highlight strength
+  specularSharpness: 24.0, // Specular sharpness (higher = sharper)
+  boundaryGlow: 0.8, // Glow at color/black boundary
+  surfaceGlow: 0.4, // Glow from surface distortion
+  shimmerIntensity: 0.1, // Shimmer animation strength
+  overallBoost: 1.3, // Overall brightness multiplier
+  blackTint: 0.003, // Color bleed into black areas
+  breathingIntensity: 0.15, // Breathing effect strength (reduced for smoothness)
+  pulseIntensity: 0.08, // Pulse effect strength (subtle for 60FPS)
+};
+
 export const planetsConfig = [
-    // Orbit 1 - Gray planets (closest to sun)
-    {
-        id: 'planet1',
-        orbitIndex: 0,
-        angle: 0,
-        text: 'Alpha',
-        color: {
-            base: '#B9B9B9',
-            glowIntensity: 0.3
-        },
-        size: 0.4,
-        blobness: 0.15,
-        textColor: '#FFFFFF',
-        textSize: 0.1,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.4,
-            waveAmplitude: 0.12,
-            breathingSpeed: 0.3,
-            breathingScale: 0.04,
-            noiseScale: 2.5,
-            flowSpeed: 0.2
-        },
-        rotation: {
-            speed: 0.005,
-            axis: { x: 0, y: 1, z: 0.2 }
-        }
+  {
+    id: '1',
+    orbitIndex: 1,
+    angle: 320,
+    text: '',
+    seed: 42.7,
+    color: {
+      base: '#B9B9B9',
+      glowIntensity: 0.7,
     },
-    {
-        id: 'planet2',
-        orbitIndex: 0,
-        angle: Math.PI, // 180° opposite
-        text: 'Beta',
-        color: {
-            base: '#B9B9B9',
-            glowIntensity: 0.3
-        },
-        size: 0.42,
-        blobness: 0.18,
-        textColor: '#FFFFFF',
-        textSize: 0.1,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.45,
-            waveAmplitude: 0.14,
-            breathingSpeed: 0.35,
-            breathingScale: 0.05,
-            noiseScale: 2.8,
-            flowSpeed: 0.25
-        },
-        rotation: {
-            speed: 0.004,
-            axis: { x: 0.1, y: 1, z: 0 }
-        }
+    size: 0.8,
+    textColor: '#FFFFFF',
+    textSize: 1.6,
+  },
+  {
+    id: '2',
+    orbitIndex: 0,
+    angle: (Math.PI * 2) / 4.75,
+    text: 'Integration and\nAutomation',
+    color: {
+      base: '#00C77F',
+      glowIntensity: 0.7,
     },
-    
-    // Orbit 2 - Cyan planets
-    {
-        id: 'planet3',
-        orbitIndex: 1,
-        angle: 0,
-        text: 'Gamma',
-        color: {
-            base: '#00C5C5',
-            glowIntensity: 0.4
-        },
-        size: 0.5,
-        blobness: 0.2,
-        textColor: '#FFFFFF',
-        textSize: 0.12,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.5,
-            waveAmplitude: 0.15,
-            breathingSpeed: 0.4,
-            breathingScale: 0.06,
-            noiseScale: 3.0,
-            flowSpeed: 0.3
-        },
-        rotation: {
-            speed: 0.006,
-            axis: { x: 0, y: 1, z: 0.3 }
-        }
+    size: 0.7,
+    textColor: '#FFFFFF',
+    textSize: 1.5,
+  },
+  {
+    id: '3',
+    orbitIndex: 1,
+    angle: (Math.PI * 5) / 7,
+    text: 'AI-Native Product\nDevelopment',
+    color: {
+      base: '#B9B9B9',
+      glowIntensity: 0.7,
     },
-    {
-        id: 'planet4',
-        orbitIndex: 1,
-        angle: Math.PI,
-        text: 'Delta',
-        color: {
-            base: '#00C5C5',
-            glowIntensity: 0.35,
-        },
-        size: 0.48,
-        blobness: 0.16,
-        textColor: '#FFFFFF',
-        textSize: 0.11,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.48,
-            waveAmplitude: 0.13,
-            breathingSpeed: 0.38,
-            breathingScale: 0.055,
-            noiseScale: 2.7,
-            flowSpeed: 0.28
-        },
-        rotation: {
-            speed: 0.0055,
-            axis: { x: 0.2, y: 1, z: 0.1 }
-        }
+    size: 0.75,
+    textColor: '#FFFFFF',
+    textSize: 2.5,
+  },
+  {
+    id: '4',
+    orbitIndex: 0,
+    angle: Math.PI / 1.6,
+    text: 'AI Solutions &\nWorkflow\nProductization',
+    color: {
+      base: '#5AC1CC',
+      glowIntensity: 0.7,
     },
-    
-    // Orbit 3 - Orange planets
-    {
-        id: 'planet5',
-        orbitIndex: 2,
-        angle: 0,
-        text: 'Epsilon',
-        color: {
-            base: '#CE7F01',
-            glowIntensity: 0.45
-        },
-        size: 0.55,
-        blobness: 0.22,
-        textColor: '#FFFFFF',
-        textSize: 0.13,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.55,
-            waveAmplitude: 0.18,
-            breathingSpeed: 0.45,
-            breathingScale: 0.07,
-            noiseScale: 3.2,
-            flowSpeed: 0.35
-        },
-        rotation: {
-            speed: 0.007,
-            axis: { x: 0.1, y: 1, z: 0.2 }
-        }
+    size: 0.8,
+    textColor: '#FFFFFF',
+    textSize: 2.0,
+  },
+  {
+    id: '5',
+    orbitIndex: 2,
+    angle: Math.PI,
+    text: '',
+    color: {
+      base: '#00C77F',
+      glowIntensity: 0.7,
     },
-    {
-        id: 'planet6',
-        orbitIndex: 2,
-        angle: Math.PI,
-        text: 'Zeta',
-        color: {
-            base: '#CE7F01',
-            glowIntensity: 0.4
-        },
-        size: 0.52,
-        blobness: 0.19,
-        textColor: '#FFFFFF',
-        textSize: 0.12,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.52,
-            waveAmplitude: 0.16,
-            breathingSpeed: 0.42,
-            breathingScale: 0.065,
-            noiseScale: 2.9,
-            flowSpeed: 0.32
-        },
-        rotation: {
-            speed: 0.0065,
-            axis: { x: 0, y: 1, z: 0.15 }
-        }
+    size: 0.5,
+    textColor: '#FFFFFF',
+    textSize: 0,
+  },
+  {
+    id: '6',
+    orbitIndex: 2,
+    angle: (Math.PI * 2) / 6,
+    text: 'Business-facing\nCustom Solutions',
+    color: {
+      base: '#59C1CC',
+      glowIntensity: 0.7,
     },
-    
-    // Orbit 4 - Green planets (farthest from sun)
-    {
-        id: 'planet7',
-        orbitIndex: 3,
-        angle: 0,
-        text: 'Eta',
-        color: {
-            base: '#00C77F',
-            glowIntensity: 0.5
-        },
-        size: 0.6,
-        blobness: 0.25,
-        textColor: '#FFFFFF',
-        textSize: 0.14,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.6,
-            waveAmplitude: 0.2,
-            breathingSpeed: 0.5,
-            breathingScale: 0.08,
-            noiseScale: 3.5,
-            flowSpeed: 0.4
-        },
-        rotation: {
-            speed: 0.008,
-            axis: { x: 0.15, y: 1, z: 0.25 }
-        }
+    size: 0.95,
+    textColor: '#FFFFFF',
+    textSize: 2.5,
+  },
+  {
+    id: '7',
+    orbitIndex: 1,
+    angle: (Math.PI * 5) / 4.5,
+    text: 'Data Intelligence\n& Architecture',
+    color: {
+      base: '#FFA100',
+      glowIntensity: 0.6,
     },
-    {
-        id: 'planet8',
-        orbitIndex: 3,
-        angle: Math.PI,
-        text: 'Theta',
-        color: {
-            base: '#00C77F',
-            glowIntensity: 0.45
-        },
-        size: 0.58,
-        blobness: 0.23,
-        textColor: '#FFFFFF',
-        textSize: 0.13,
-        liquidMovement: {
-            enabled: true,
-            waveSpeed: 0.58,
-            waveAmplitude: 0.19,
-            breathingSpeed: 0.48,
-            breathingScale: 0.075,
-            noiseScale: 3.3,
-            flowSpeed: 0.38
-        },
-        rotation: {
-            speed: 0.0075,
-            axis: { x: 0.05, y: 1, z: 0.3 }
-        }
-    }
+    size: 1.5,
+    textColor: '#FFFFFF',
+    textSize: 2.5,
+  },
+  {
+    id: '8',
+    orbitIndex: 0,
+    angle: Math.PI / 18,
+    text: 'Product and AI\nStrategy Consulting',
+    color: {
+      base: '#FFFF77',
+      glowIntensity: 0.7,
+    },
+    size: 1.25,
+    textColor: '#FFFFFF',
+    textSize: 2.0,
+  },
 ];
 
 /**
  * Get planets by orbit index
- * @param {number} orbitIndex - The orbit index (0-3)
+ * @param {number} orbitIndex - The orbit index (0-2)
  * @returns {Array} Array of planet configs for that orbit
  */
 export function getPlanetsByOrbit(orbitIndex) {
-    return planetsConfig.filter(planet => planet.orbitIndex === orbitIndex);
+  return planetsConfig.filter((planet) => planet.orbitIndex === orbitIndex);
 }
 
 /**
@@ -245,5 +166,5 @@ export function getPlanetsByOrbit(orbitIndex) {
  * @returns {Object|null} Planet configuration or null if not found
  */
 export function getPlanetById(planetId) {
-    return planetsConfig.find(planet => planet.id === planetId) || null;
+  return planetsConfig.find((planet) => planet.id === planetId) || null;
 }

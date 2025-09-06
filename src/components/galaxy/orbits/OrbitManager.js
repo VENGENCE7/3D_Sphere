@@ -11,35 +11,29 @@ export class OrbitManager {
     this.orbitThickness = 2.0; // Line thickness
     this.orbitOpacity = 0.7; // Line opacity
 
-    // Orbital configurations from GALAXY.md
+    // Global orbit geometry
+    this.orbitRadius = 11; // Same radius for all orbits
+    this.orbitEllipticalRatio = 0.8; // Same elliptical ratio for all orbits
+
+    // Orbital configurations with Z-axis inclination and Y-axis tilt
     this.orbitConfigs = [
       {
         index: 0,
-        radius: 12, 
-        ellipticalRatio: 0.6, 
-        inclination: 5, 
+        inclination: 8,   // Z-axis rotation (sideways)
+        tiltY: 0,         // Y-axis rotation (horizontal)
         showPath: true,
       },
       {
         index: 1,
-        radius: 12, 
-        ellipticalRatio: 0.6, 
-        inclination: -25, 
+        inclination: -10, // Z-axis rotation (sideways)
+        tiltY: 0,        // Y-axis rotation (horizontal)
         showPath: true,
       },
       {
         index: 2,
-        radius: 12, 
-        ellipticalRatio: 0.6, 
-        inclination: -15, 
+        inclination: -20, // Z-axis rotation (sideways)
+        tiltY: 0,       // Y-axis rotation (horizontal)
         showPath: true,
-      },
-      {
-        index: 3,
-        radius: 12, 
-        ellipticalRatio: 0.6, 
-        inclination: -15, 
-        showPath: false,
       },
     ];
 
@@ -57,6 +51,8 @@ export class OrbitManager {
     this.orbitConfigs.forEach((config) => {
       const orbit = new Orbit({
         ...config,
+        radius: this.orbitRadius,
+        ellipticalRatio: this.orbitEllipticalRatio,
         orbitColor: this.orbitColor,
         orbitThickness: this.orbitThickness,
         orbitOpacity: this.orbitOpacity,

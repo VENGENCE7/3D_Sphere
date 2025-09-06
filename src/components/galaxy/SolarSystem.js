@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { StarField } from './background/StarField.js';
 import { SunBlob } from './sun/SunBlob.js';
 import { OrbitManager } from './orbits/OrbitManager.js';
@@ -67,22 +66,21 @@ export class SolarSystem {
     }
     
     /**
-     * Create all planets based on configuration
+     * Create all stationary planets
      */
     createPlanets() {
         planetsConfig.forEach(config => {
-            // Create planet blob
+            // Create planet
             const planet = new PlanetBlob(config);
             
-            // Store planet with its orbit info
+            // Store planet data
             this.planets.push({
                 planet: planet,
                 orbitIndex: config.orbitIndex,
-                angle: config.angle,
-                config: config
+                angle: config.angle  // Fixed position on orbit
             });
             
-            // Add planet to scene
+            // Add to scene
             this.scene.add(planet.getGroup());
         });
     }
@@ -122,10 +120,10 @@ export class SolarSystem {
             const orbit = this.orbitManager.getOrbit(orbitIndex);
             if (!orbit) return;
             
-            // Calculate planet position on its orbit
+            // Calculate planet position at fixed angle
             const position = orbit.getPositionAtAngle(angle);
             
-            // Update planet (position, animation, dynamic sizing)
+            // Update planet animations and dynamic sizing (position is fixed)
             planet.update(this.time, position, this.camera);
         });
     }

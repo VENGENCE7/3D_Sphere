@@ -5,6 +5,7 @@ uniform float uWaveSpeed;
 uniform float uWaveAmplitude;
 uniform float uBreathingSpeed;
 uniform float uBreathingScale;
+uniform float uSeed;
 
 varying vec3 vNormal;
 varying vec3 vPosition;
@@ -91,31 +92,39 @@ void main() {
     vNormal = normal;
     vPosition = position;
     
-    // Breathing effect
-    float breathing = sin(uTime * uBreathingSpeed) * uBreathingScale + 1.0;
-    
-    // Liquid-like surface deformation
+    // Organic plasma-like deformation
     vec3 pos = position;
     
-    // Multiple noise layers for organic movement
-    float noise1 = snoise(pos * 2.0 + uTime * uWaveSpeed * 0.5);
-    float noise2 = snoise(pos * 4.0 - uTime * uWaveSpeed * 0.3) * 0.5;
-    float noise3 = snoise(pos * 8.0 + uTime * uWaveSpeed * 0.2) * 0.25;
+    // Use seed to create unique pattern for each planet
+    vec3 seedOffset = vec3(uSeed * 123.456, uSeed * 789.012, uSeed * 345.678);
     
-    // Combine noise layers
+    // Subtle breathing effect for plasma movement
+    float breathing = sin(uTime * uBreathingSpeed + uSeed * 2.0) * uBreathingScale + 1.0;
+    
+    // Multiple layers of noise for gaseous plasma effect
+    // Layer 1: Large scale movements
+    float noise1 = snoise(pos * 1.2 + seedOffset + uTime * uWaveSpeed * 0.3);
+    
+    // Layer 2: Medium scale detail
+    float noise2 = snoise(pos * 2.5 + seedOffset * 1.3 - uTime * uWaveSpeed * 0.2) * 0.5;
+    
+    // Layer 3: Fine detail for organic feel
+    float noise3 = snoise(pos * 4.0 + seedOffset * 0.7 + uTime * uWaveSpeed * 0.15) * 0.25;
+    
+    // Combine noise layers for organic plasma movement
     float totalNoise = (noise1 + noise2 + noise3) * uBlobness;
     
-    // Wave movement
-    float wave = sin(pos.x * 3.0 + uTime * uWaveSpeed) * 
-                 sin(pos.y * 3.0 + uTime * uWaveSpeed * 0.7) * 
-                 sin(pos.z * 3.0 + uTime * uWaveSpeed * 0.5);
+    // Subtle flowing waves for gaseous effect
+    float flow = sin(pos.x * 2.0 + uTime * uWaveSpeed + uSeed) * 
+                 sin(pos.y * 2.0 - uTime * uWaveSpeed * 0.8 + uSeed * 1.5) * 
+                 sin(pos.z * 2.0 + uTime * uWaveSpeed * 0.6 + uSeed * 0.5) * 0.15;
     
-    // Apply deformation
-    float distortion = (totalNoise + wave * 0.3) * uWaveAmplitude;
+    // Apply plasma-like deformation
+    float distortion = (totalNoise + flow) * uWaveAmplitude * breathing;
     vDistortion = distortion;
     
-    // Displace vertices along normals
-    vec3 newPosition = pos + normal * distortion * breathing;
+    // Displace vertices along normals for blob deformation
+    vec3 newPosition = pos + normal * distortion;
     
     // Apply scale
     newPosition *= uScale;

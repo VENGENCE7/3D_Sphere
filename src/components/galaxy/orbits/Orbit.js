@@ -12,7 +12,8 @@ export class Orbit {
         // Orbital configuration
         this.radius = config.radius || 10;
         this.ellipticalRatio = config.ellipticalRatio || 0.8; // Semi-minor axis ratio (0.8 = 80% of major axis)
-        this.inclination = config.inclination || 0; // degrees
+        this.inclination = config.inclination || 0; // degrees (Z-axis rotation - sideways tilt)
+        this.tiltY = config.tiltY || 0; // degrees (Y-axis rotation - horizontal rotation)
         this.index = config.index || 0;
         
         // Orbit visual configuration
@@ -46,11 +47,15 @@ export class Orbit {
      * Setup orbital inclination
      */
     setupInclination() {
-        // Convert inclination from degrees to radians
+        // Convert inclination and tilt from degrees to radians
         const inclinationRad = THREE.MathUtils.degToRad(this.inclination);
+        const tiltYRad = THREE.MathUtils.degToRad(this.tiltY);
         
         // Apply rotation for sideways (left/right) tilting using Z-axis
         this.orbitGroup.rotation.z = inclinationRad;
+        
+        // Apply rotation around Y-axis (horizontal rotation)
+        this.orbitGroup.rotation.y = tiltYRad;
     }
     
     
