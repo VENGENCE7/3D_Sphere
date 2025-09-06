@@ -26,6 +26,23 @@ varying vec3 vNormal;
 varying vec3 vPosition;
 varying float vDistortion;
 
+// Noise function for organic movement
+float hash(vec2 p) {
+    float h = dot(p,vec2(127.1,311.7));
+    return -1.0 + 2.0 * fract(sin(h)*43758.5453123);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f*f*(3.0-2.0*f);
+    
+    return mix( mix( hash( i + vec2(0.0,0.0) ), 
+                     hash( i + vec2(1.0,0.0) ), u.x),
+                mix( hash( i + vec2(0.0,1.0) ), 
+                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
+}
+
 void main() {
     // Normalized normal for lighting
     vec3 normal = normalize(vNormal);
@@ -44,28 +61,45 @@ void main() {
     float seedOffset4 = uSeed * 3.456;
     float seedOffset5 = uSeed * 7.890;
     
-    // Unique speed multipliers for each planet
-    float speedMult1 = 0.5 + mod(uSeed * 0.123, 1.0); // 0.5 to 1.5
-    float speedMult2 = 0.3 + mod(uSeed * 0.456, 1.2); // 0.3 to 1.5
-    float speedMult3 = 0.4 + mod(uSeed * 0.789, 1.1); // 0.4 to 1.5
+    // 50 FPS timing (0.02 seconds per frame)
+    float frameTime = uTime * 0.833; // Adjusted for 50 FPS feel
     
-    // Random distortion for organic edge variation with unique speeds
-    float edgeDistortion1 = sin(vPosition.x * (3.0 + seedOffset1) + uTime * speedMult1 + seedOffset1) * 
-                            cos(vPosition.y * (4.0 - seedOffset2) - uTime * speedMult2 + seedOffset2);
-    float edgeDistortion2 = sin(vPosition.z * (5.0 + seedOffset3) - uTime * speedMult3 + seedOffset3) * 
-                            cos(vPosition.x * (3.5 - seedOffset4) + uTime * speedMult1 * 0.7 + seedOffset1);
-    float edgeDistortion3 = sin(vPosition.y * (4.5 + seedOffset5) + uTime * speedMult2 * 0.8 + seedOffset4) * 
-                            cos(vPosition.z * (3.0 + seedOffset1) - uTime * speedMult3 * 0.6 + seedOffset5);
+    // Create asymmetrical center offset that constantly moves
+    vec2 centerOffset = vec2(
+        sin(frameTime * 1.3 + seedOffset1) * 0.25 + 
+        cos(frameTime * 0.7 + seedOffset2) * 0.15,
+        cos(frameTime * 1.1 + seedOffset3) * 0.2 + 
+        sin(frameTime * 0.9 + seedOffset4) * 0.18
+    );
     
-    // Combine distortions for complex, unique edge movement
-    float edgeVariation = (edgeDistortion1 + edgeDistortion2 * 0.7 + edgeDistortion3 * 0.5) * 0.08 + vDistortion * 0.1;
+    // Calculate distance from displaced center for asymmetry
+    vec2 screenPos = vec2(vPosition.x, vPosition.y);
+    float distFromCenter = length(screenPos - centerOffset);
     
-    // Apply color coverage from rim inward (controlled by uColorCoverage)
-    // 0.1 = 10% colored from rim, 0.5 = 50% colored, etc.
+    // Multi-layer organic noise for complex movement
+    float noiseLayer1 = noise(screenPos * 3.0 + vec2(frameTime * 1.2, frameTime * 0.8));
+    float noiseLayer2 = noise(screenPos * 5.0 - vec2(frameTime * 0.9, frameTime * 1.4));
+    float noiseLayer3 = noise(screenPos * 8.0 + vec2(frameTime * 1.5, frameTime * 0.6));
+    
+    // Combine noise layers with different weights for organic variation
+    float organicDistortion = noiseLayer1 * 0.3 + noiseLayer2 * 0.2 + noiseLayer3 * 0.1;
+    
+    // Create morphing shape with multiple sine waves
+    float shapeMorph1 = sin(atan(screenPos.y - centerOffset.y, screenPos.x - centerOffset.x) * 3.0 + frameTime * 2.1) * 0.15;
+    float shapeMorph2 = cos(atan(screenPos.y - centerOffset.y, screenPos.x - centerOffset.x) * 5.0 - frameTime * 1.7) * 0.1;
+    float shapeMorph3 = sin(distFromCenter * 10.0 + frameTime * 3.2) * 0.08;
+    
+    // Combine all morphing effects
+    float totalMorph = shapeMorph1 + shapeMorph2 + shapeMorph3 + organicDistortion;
+    
+    // Apply asymmetrical distortion to rim-to-center calculation
+    float asymmetricalRimToCenter = rimToCenter + distFromCenter * 0.3 + totalMorph;
+    
+    // Apply color coverage with asymmetrical morphing boundary
     float colorThreshold = 1.0 - uColorCoverage;
     
-    // Add distortion to the color boundary for organic movement
-    float distortedBoundary = rimToCenter - colorThreshold + edgeVariation;
+    // Create constantly changing, asymmetrical boundary
+    float distortedBoundary = asymmetricalRimToCenter - colorThreshold;
     
     // Create smooth gradient transition zone (softer edge)
     float gradientZone = 0.15; // Width of gradient transition
@@ -89,8 +123,8 @@ void main() {
     float pulseHarmonic = sin(uTime * pulseSpeed * 1.7 + pulsePhase) * 0.2;
     float pulseGlow = (pulseBase + pulseHarmonic) * uPulseIntensity * 0.6 + 1.0;
     
-    // Glowing color with breathing effect
-    vec3 glowingColor = uBaseColor * uGlowIntensity * breathingGlow;
+    // Glowing color with subtle breathing effect (reduced for color accuracy)
+    vec3 glowingColor = uBaseColor * uGlowIntensity * (1.0 + (breathingGlow - 1.0) * 0.3);
     
     // Dynamic color bleeding in black areas with unique movement for each planet
     float bleedSpeed1 = 0.2 + mod(uSeed * 0.345, 0.8); // 0.2 to 1.0
@@ -116,25 +150,25 @@ void main() {
     float auraFresnel = pow(fresnel, uAuraWidth);
     float rimFresnel = pow(fresnel, uRimGlowWidth);
     
-    // Colored rim glow with controllable intensity
-    vec3 rimGlow = uBaseColor * uRimGlowIntensity * pulseGlow;
-    color = mix(color, rimGlow, rimFresnel * 0.5);
+    // Colored rim glow with controllable intensity (reduced pulse effect for color accuracy)
+    vec3 rimGlow = uBaseColor * uRimGlowIntensity * (1.0 + (pulseGlow - 1.0) * 0.2);
+    color = mix(color, rimGlow, rimFresnel * 0.3);
     
-    // Controllable aura glow
-    vec3 auraGlow = uBaseColor * uAuraIntensity * breathingGlow;
-    color += auraGlow * auraFresnel * 0.2;
+    // Controllable aura glow (reduced breathing effect for color accuracy)
+    vec3 auraGlow = uBaseColor * uAuraIntensity;
+    color += auraGlow * auraFresnel * 0.15;
     
-    // Controllable specular highlights
+    // Controllable specular highlights (pure color, no white mixing)
     vec3 reflectDir = reflect(-viewDir, normal);
     vec3 lightDir = normalize(vec3(0.5, 1.0, 0.5));
     float specular = pow(max(0.0, dot(reflectDir, lightDir)), uSpecularSharpness);
     vec3 specularColor = uBaseColor * specular * uSpecularIntensity;
-    color += specularColor * breathingGlow * 0.5;
+    color += specularColor * 0.3;
     
-    // Controllable boundary glow
+    // Controllable boundary glow (pure color)
     float boundaryGlowFactor = 1.0 - abs(distortedBoundary - gradientZone * 0.5);
     boundaryGlowFactor = pow(max(0.0, boundaryGlowFactor), 3.0);
-    color += uBaseColor * boundaryGlowFactor * uBoundaryGlow * pulseGlow;
+    color += uBaseColor * boundaryGlowFactor * uBoundaryGlow * 0.5;
     
     // Controllable surface glow
     float surfaceGlowFactor = abs(vDistortion) * 1.5;
