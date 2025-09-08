@@ -37,7 +37,7 @@ export const globalShaderControls = {
   boundaryGlow: 0.8, // Glow at color/black boundary
   surfaceGlow: 0.0, // Glow from surface distortion
   shimmerIntensity: 0.0, // Shimmer animation strength
-  overallBoost: 1.2, // Overall brightness multiplier (reduced for color accuracy)
+  overallBoost: 1.75, // Overall brightness multiplier (reduced for color accuracy)
   blackTint: 0.1, // Color bleed into black areas
   breathingIntensity: 0.15, // Breathing effect strength (reduced for smoothness)
   pulseIntensity: 0.03, // Pulse effect strength (subtle for 60FPS)
@@ -128,7 +128,7 @@ export const planetsConfig = [
     angle: (Math.PI * 5) / 4.5,
     text: 'Data Intelligence\n& Architecture',
     color: {
-      base: '#FFA100',
+      base: '#FFA400',
       glowIntensity: 0.6,
     },
     size: 1.5,
